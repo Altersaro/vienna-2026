@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1C2233">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vienna">
+<meta name="robots" content="noindex">
+<title>Vienna · 23–27 novembre</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap">
+<style>
+:root{
+  --navy:#1C2233; --navy2:#2A3146; --cream:#F5EFE4; --card:#FBF8F2; --line:#E6DCC8;
+  --gold:#D4AF5F; --gold-d:#8A6A22; --ink:#1C2233; --muted:#4A5060; --muted2:#6A6F7C;
+  --c-viaggio:#2F5C8A; --c-visita:#8A6A22; --c-cibo:#9A4A1E; --c-serata:#8E2A2A; --ok:#2F6B3A;
+  --serif:'Playfair Display',Georgia,serif; --sans:'DM Sans',system-ui,-apple-system,Segoe UI,Arial,sans-serif;
+  --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--cream);color:var(--ink);font-family:var(--sans);-webkit-text-size-adjust:100%}
+body{min-height:100vh;min-height:100dvh}
+a{color:var(--gold-d)}
+button{font:inherit}
+img{display:block;max-width:100%}
+.app{max-width:520px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--cream)}
+main{flex:1;padding-bottom:calc(84px + var(--safe-b))}
+.hdr{background:var(--navy);color:var(--cream);padding:calc(18px + var(--safe-t)) 18px 14px;display:flex;flex-direction:column;gap:12px}
+.hdr-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.kicker{margin:0;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-weight:700}
+.h1{margin:4px 0 0;font-family:var(--serif);font-size:26px;line-height:1.15;font-weight:700}
+.round{flex:none;width:44px;height:44px;border-radius:22px;background:var(--navy2);display:flex;align-items:center;justify-content:center;color:var(--gold);text-decoration:none}
+.chips{display:flex;gap:6px}
+.chip{flex:1;min-height:52px;border:none;border-radius:12px;background:var(--navy2);color:#E6E0D4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;padding:6px 0}
+.chip span{font-size:11px;font-weight:700;letter-spacing:1px}
+.chip b{font-size:18px}
+.chip[aria-pressed="true"]{background:var(--gold);color:var(--navy)}
+.content{padding:16px;display:flex;flex-direction:column;gap:10px}
+.alert{background:#FBF3DC;border:1px solid #E3CF96;border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.4;color:#5C4610}
+.toggle{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px}
+.toggle button{flex:1;min-height:44px;border:none;border-radius:10px;background:transparent;color:var(--muted);font-weight:700;font-size:13px;cursor:pointer}
+.toggle button[aria-pressed="true"]{background:var(--navy);color:var(--cream)}
+.step{display:flex;gap:12px}
+.step-time{width:48px;flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:14px}
+.step-time b{font-size:13px}
+.dot{width:10px;height:10px;border-radius:5px}
+.card{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.card img{width:100%;height:150px;object-fit:cover;border-radius:10px;background:#E6DCC8}
+.kind{margin:0;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.card h2,.card h3{margin:0;font-size:16px;line-height:1.3;font-weight:700}
+.note{margin:0;font-size:14px;line-height:1.45;color:var(--muted)}
+.btn{align-self:flex-start;min-height:44px;padding:0 16px;border-radius:22px;background:var(--navy);color:var(--cream);font-size:14px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer}
+.btn svg{flex:none}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.price{flex:none;font-size:15px;font-weight:700;color:var(--c-cibo)}
+.meta{font-size:12px;font-weight:700;color:var(--gold-d);letter-spacing:.5px}
+.linkcard{background:var(--navy);color:var(--cream);border-radius:14px;padding:14px 16px;text-decoration:none;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px}
+.linkcard small{display:block;color:#C9CDD8;font-size:12px;margin-top:2px}
+.small{margin:0;font-size:12px;line-height:1.45;color:#5A6070}
+/* home */
+.home{background:var(--navy);color:var(--cream);min-height:100%;position:relative;overflow:hidden}
+.home-inner{position:relative;padding:calc(48px + var(--safe-t)) 22px 24px;display:flex;flex-direction:column;gap:20px}
+.home h1{margin:0;font-family:var(--serif);font-size:64px;line-height:1;font-weight:700}
+.home .sub{margin:0;font-family:var(--serif);font-style:italic;font-size:19px;color:#DCD6CA}
+.today{background:var(--cream);color:var(--ink);border-radius:20px;padding:14px 14px 18px;display:flex;flex-direction:column;gap:12px}
+.today img{width:100%;height:160px;object-fit:cover;border-radius:14px}
+.badge{background:var(--navy);color:var(--gold);border-radius:12px;padding:4px 10px;font-size:12px;font-weight:700}
+.today h2{margin:0;font-family:var(--serif);font-size:28px;line-height:1.15}
+.tops{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.tops div{display:flex;gap:12px;align-items:baseline;font-size:15px;line-height:1.35}
+.tops b{width:44px;flex:none;font-size:13px;color:var(--gold-d)}
+.cta{min-height:54px;border-radius:27px;background:var(--navy);color:var(--cream);text-decoration:none;display:flex;align-items:center;justify-content:center;gap:10px;font-size:16px;font-weight:700}
+.quick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.quick a{min-height:78px;border-radius:16px;background:var(--navy2);color:var(--cream);text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:700;text-align:center}
+.foot{margin:0;font-size:12px;color:#9AA1B2}
+/* biglietti */
+.prog{height:8px;border-radius:4px;background:var(--navy2);overflow:hidden}
+.prog i{display:block;height:8px;border-radius:4px;background:var(--gold);transition:width .25s}
+.tick{flex:none;width:44px;height:44px;border-radius:12px;border:2px solid #B9AE98;background:#fff;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.tick[aria-pressed="true"]{border-color:var(--ok);background:var(--ok)}
+.done h3{color:#5A6070;text-decoration:line-through}
+.ext{display:inline-flex;align-items:center;gap:6px;min-height:36px;font-size:14px;font-weight:700;color:var(--gold-d)}
+/* nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--card);border-top:1px solid var(--line);padding:6px 6px calc(10px + var(--safe-b))}
+nav.tabs .in{max-width:520px;margin:0 auto;display:flex}
+nav.tabs a{flex:1;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;color:var(--muted2);font-size:11px;font-weight:500}
+nav.tabs a[aria-current="page"]{color:var(--ink);font-weight:700}
+.sec{margin:6px 0 0;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-d);font-weight:700}
+.info p{margin:0}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <main id="view" tabindex="-1"></main>
+  <nav class="tabs" aria-label="Sezioni"><div class="in" id="tabs"></div></nav>
+</div>
+
+<script>
+// ---------- Dati del viaggio (verificati il 27–28/10/2026) ----------
+const HOTEL = 'Albertgasse 48, 1080 Wien';
+const COLORS = { viaggio: 'var(--c-viaggio)', visita: 'var(--c-visita)', cibo: 'var(--c-cibo)', serata: 'var(--c-serata)' };
+const KIND = { viaggio: 'Spostamento', visita: 'Da vedere', cibo: 'Mangiare', serata: 'Sera' };
+
+// s(ora, tipo, titolo, nota, destinazione per Maps, modo, foto, etichetta pulsante)
+const s = (time, kind, title, note, dest, mode, img, label) => ({ time, kind, title, note, dest, mode: mode || 'transit', img, label });
+
+const DAYS = [
+  { n: 1, short: 'LUN', num: '23', label: 'Giorno 1 · lunedì 23 novembre', title: 'Arrivo e mercatino del Rathaus', heroImg: 'stephansdom',
+    alert: 'Compra il biglietto della tratta aeroporto (≈2,30 €) e attiva il 7 Tage WIEN da oggi.',
+    steps: [
+      s('11:40', 'viaggio', 'Atterraggio a Vienna (VIE)', 'REX 7 fino a Meidling, poi U6 fino a Josefstädter Straße.', HOTEL, 'transit', 'aeroporto', 'Verso l’hotel'),
+      s('13:00', 'visita', 'Hotel Korotan: check-in o bagagli', HOTEL),
+      s('13:30', 'cibo', 'Pranzo: Prinz Ferdinand', 'Mittagsmenü a 4 min a piedi. Schnitzel con zuppa ≈14,90 €.', 'Bennoplatz 2, 1080 Wien', 'walking', 'schnitzel'),
+      s('15:00', 'visita', 'Stephansdom → Graben → Kohlmarkt → MQ', 'Tram 43 + bus 1A fino a Stephansplatz, poi tutto a piedi. Navata del Duomo gratis.', 'Stephansplatz, 1010 Wien', 'transit', 'stephansdom'),
+      s('19:00', 'serata', 'Christkindlmarkt al Rathausplatz', 'Cena tra le bancarelle: gulasch, salsicce, punch.', 'Rathausplatz, 1010 Wien', 'walking', 'rathaus')
+    ]},
+  { n: 2, short: 'MAR', num: '24', label: 'Giorno 2 · martedì 24 novembre', title: 'Sissi, Parlamento e Figlmüller', heroImg: 'belvedere',
+    alert: 'Prenotati: Belvedere alle 16:00 · tavolo Figlmüller alle 21:30.',
+    steps: [
+      s('10:00', 'visita', 'Hofburg: Sisi Museum e Appartamenti', 'Tram 2 fino a Parlament, poi 9 min a piedi. Incluso nel Sisi Pass.', 'Sisi Museum, Michaelerplatz, 1010 Wien', 'transit', 'appartamenti'),
+      s('13:00', 'cibo', 'Pranzo al Justizcafé', 'Ultimo piano del Palazzo di Giustizia, 14 min a piedi. Controllo di sicurezza, cucina 11–14:30.', 'Schmerlingplatz 11, 1010 Wien', 'walking', 'justiz'),
+      s('14:00', 'visita', 'Parlamento, visita gratuita', '7 min a piedi. Serve un documento con foto.', 'Parlament, Dr.-Karl-Renner-Ring 3, 1010 Wien', 'walking', 'parlament'),
+      s('15:00', 'cibo', 'Caffè storico: Sacher o Demel', 'Tram 1 da Parlament a Oper/Karlsplatz.', 'Café Sacher, Philharmoniker Straße 4, 1010 Wien', 'transit', 'sachertorte'),
+      s('16:00', 'visita', 'Belvedere Superiore · slot 16:00', 'Tram D fino a Schloss Belvedere. Il Bacio di Klimt. Chiude alle 18.', 'Oberes Belvedere, Prinz-Eugen-Straße 27, 1030 Wien', 'transit', 'belvedere'),
+      s('18:00', 'serata', 'Karlskirche e mercatino Art Advent', '18 min a piedi, in discesa nei giardini.', 'Karlsplatz, 1040 Wien', 'walking', 'karlskirche'),
+      s('21:30', 'cibo', 'Tavolo da Figlmüller', 'U1 fino a Stephansplatz. La cucina chiude alle 22: ordina subito.', 'Figlmüller, Bäckerstraße 6, 1010 Wien', 'transit', 'schnitzel')
+    ]},
+  { n: 3, short: 'MER', num: '25', label: 'Giorno 3 · mercoledì 25 novembre', title: 'Schönbrunn, dal pomeriggio alla sera', heroImg: 'schoenbrunn',
+    alert: 'Prenotato: palazzo di Schönbrunn alle 13:30. Tramonto alle 16:08.',
+    steps: [
+      s('10:00', 'visita', 'Museo del Mobile', 'Bus 13A fino a Siebensterngasse. Incluso nel Sisi Pass.', 'Möbel Museum Wien, Andreasgasse 7, 1070 Wien', 'transit', 'moebel'),
+      s('12:00', 'cibo', 'Pranzo a Hietzing', 'Tram 60 da Westbahnhof. Otto Cafe o Radatz.', 'Hietzinger Hauptstraße 22, 1130 Wien'),
+      s('13:30', 'visita', 'Palazzo di Schönbrunn · slot 13:30', '14 min a piedi da Hietzing.', 'Schloss Schönbrunn, 1130 Wien', 'walking', 'schoenbrunn'),
+      s('14:45', 'visita', 'Giardini e Gloriette', 'Salita gratuita, vista su Vienna. Sali prima del tramonto.', 'Gloriette, 1130 Wien', 'walking', 'gloriette'),
+      s('16:30', 'serata', 'Mercatino di Schönbrunn e cena', 'Nel cortile davanti al palazzo, aperto fino alle 21.', null, null, 'mercatino-schoenbrunn'),
+      s('19:30', 'viaggio', 'Rientro in hotel', 'U4 + U6, circa 35 min.', HOTEL, 'transit', null, 'Verso l’hotel')
+    ]},
+  { n: 4, short: 'GIO', num: '26', label: 'Giorno 4 · giovedì 26 novembre', title: 'Bratislava e musical', heroImg: 'castello-bratislava',
+    alert: 'Treno di ritorno alle 17:16 da Petržalka: non perderlo, il musical inizia alle 19:30.',
+    steps: [
+      s('09:14', 'viaggio', 'REX da Wien Hbf a Bratislava', 'Arrivo 10:10. Bratislava-Ticket: vale anche su bus e tram in città.', 'Wien Hauptbahnhof', 'transit', 'hbf'),
+      s('10:30', 'visita', 'Centro storico e Duomo di San Martino', null, 'Hlavné námestie, Bratislava', 'walking', 'duomo-bratislava'),
+      s('12:00', 'cibo', 'Pranzo: denné menu', 'Zuppa e secondo 7–12 €. Vedi “Mangiare”.', 'Drevená 8, Bratislava', 'walking'),
+      s('13:15', 'visita', 'Castello e terrazze', 'Terrazze gratis, museo circa 10 €.', 'Bratislavský hrad, Bratislava', 'walking', 'castello-bratislava'),
+      s('15:15', 'serata', 'Mercatino e cena presto', 'Hlavné námestie: primo giorno di apertura.', null, null, 'mercatino-bratislava'),
+      s('17:16', 'viaggio', 'REX da Petržalka a Wien Hbf', 'Bus 94 da Zochova alle 17:09. Arrivo a Vienna 18:15, poi U1 + U6.', 'Bratislava-Petržalka railway station', 'transit'),
+      s('19:30', 'serata', 'Die Schöne und das Biest', 'Raimund Theater, Wallgasse 18–20. Kat. F. Fine ≈22:00.', 'Raimund Theater, Wallgasse 18, 1060 Wien', 'transit', 'raimund')
+    ],
+    planB: {
+      alert: 'Piano B se restate a Vienna. Klanglicht: prenota lo slot delle 17:00 (14,90 €).',
+      steps: [
+        s('10:00', 'visita', 'Hundertwasserhaus e Village', 'Esterni gratis.', 'Hundertwasserhaus, Kegelgasse 36, 1030 Wien', 'transit', 'hundertwasser'),
+        s('11:05', 'visita', 'Prater e Ruota panoramica', 'Ruota ≈14,50 €.', 'Wiener Riesenrad, 1020 Wien', 'transit', 'riesenrad'),
+        s('13:10', 'cibo', 'Pranzo a Spittelberg', 'Zu ebener Erde und Erster Stock, Mittagsmenü.', 'Burggasse 13, 1070 Wien'),
+        s('14:10', 'visita', 'Mercatino di Spittelberg e MQ', 'Cena presto prima del Klanglicht.', 'Spittelberg, 1070 Wien', 'walking'),
+        s('17:00', 'serata', 'Klanglicht im Park', 'Schwarzenberggarten, ingresso Prinz-Eugen-Straße 25.', 'Prinz-Eugen-Straße 25, 1030 Wien'),
+        s('19:30', 'serata', 'Die Schöne und das Biest', 'Tram 18 alle 18:30 verso il teatro.', 'Raimund Theater, Wallgasse 18, 1060 Wien', 'transit', 'raimund')
+      ]
+    }},
+  { n: 5, short: 'VEN', num: '27', label: 'Giorno 5 · venerdì 27 novembre', title: 'Naschmarkt e partenza', heroImg: 'naschmarkt',
+    alert: 'Fuori dall’hotel entro le 14:00 · volo alle 17:15. Serve il biglietto della tratta aeroporto.',
+    steps: [
+      s('09:30', 'visita', 'Naschmarkt e Mariahilfer Straße', 'Tram 2 fino a Oper/Karlsplatz.', 'Naschmarkt, 1060 Wien', 'transit', 'naschmarkt'),
+      s('12:30', 'cibo', 'Pranzo: Steman o Bierhalle', 'Steman: zuppa e secondo 14 €.', 'Otto-Bauer-Gasse 7, 1060 Wien'),
+      s('13:15', 'viaggio', 'Ritiro bagagli in hotel', null, HOTEL, 'transit', null, 'Verso l’hotel'),
+      s('14:31', 'viaggio', 'Railjet da Meidling all’aeroporto', 'U6 fino a Meidling, 26 min di treno.', 'Flughafen Wien-Schwechat', 'transit'),
+      s('17:15', 'viaggio', 'Volo di ritorno', 'In aeroporto dalle 15:15.', null, null, 'aeroporto')
+    ]}
+];
+
+const p = (name, price, note, walk, dest) => ({ name, price, note, walk, dest });
+const FOOD = [
+  { title: 'Vicino all’hotel', places: [
+    p('Prinz Ferdinand', '12,90–14,90 €', 'Arrosto con canederli, oppure schnitzel con zuppa.', '4 min dall’hotel', 'Bennoplatz 2, 1080 Wien'),
+    p('Zur böhmischen Kuchl', '13,90 €', 'Cucina boema, piatti del menu a prezzo fisso.', '11 min dall’hotel', 'Schlösselgasse 18, 1080 Wien'),
+    p('Marienhof', '9,80 €', 'Piatto del giorno, zuppa a parte 2,90 €.', '15 min dall’hotel', 'Josefstädter Straße 9, 1080 Wien') ]},
+  { title: 'Dopo il Sisi Museum', places: [
+    p('Justizcafé', 'da ≈10 €', 'Ultimo piano del Palazzo di Giustizia, terrazza panoramica. Cucina 11–14:30.', '14 min dal Sisi Museum', 'Schmerlingplatz 11, 1010 Wien'),
+    p('MQ daily', '14,50 €', 'Menu completo nel MuseumsQuartier.', '7 min dal Palazzo di Giustizia', 'Museumsplatz 1, 1070 Wien') ]},
+  { title: 'A Hietzing, prima di Schönbrunn', places: [
+    p('Otto Cafe-Restaurant', 'menu del giorno', 'Mittagsmenü del giorno, aperto 7–23.', '1 min dal tram 60', 'Hietzinger Hauptstraße 22, 1130 Wien'),
+    p('Radatz Hietzing', '7,60–7,90 €', 'Gastronomia: piatti caldi, zuppa 4,30 €.', '3 min dal tram 60', 'Radatz, Hietzinger Hauptstraße, 1130 Wien') ]},
+  { title: 'Bratislava: denné menu', places: [
+    p('Bratislavský meštiansky pivovar', '7–12 €', 'Birra della casa e halušky. Zuppa e secondo nei feriali 11–14.', '8 min dalla piazza', 'Drevená 8, Bratislava'),
+    p('Slovak Pub', '7–12 €', 'Piatti slovacchi, porzioni abbondanti.', '12 min dalla piazza', 'Obchodná 62, Bratislava'),
+    p('Zum Hagenthaler', 'sera', 'Se arrivi presto al teatro: cucina viennese fino alle 23.', '3 min dal Raimund Theater', 'Wallgasse 32, 1060 Wien') ]},
+  { title: 'Prima del volo', places: [
+    p('Steman', '10,50–14 €', 'Zuppa e secondo 14 €, piatto del giorno 10,50 €.', '7 min da Mariahilfer Str.', 'Otto-Bauer-Gasse 7, 1060 Wien'),
+    p('Bierhalle Naschmarkt', 'menu pranzo', 'Menu del pranzo 11:30–15.', '2 min dal mercato', 'Bierhalle Naschmarkt, 1060 Wien'),
+    p('Prinz Ferdinand', '12,90–14,90 €', 'Comodo prima di ritirare i bagagli.', '4 min dall’hotel', 'Bennoplatz 2, 1080 Wien') ]}
+];
+
+const TICKETS = [
+  { id: 'wien', name: '7 Tage WIEN digitale ×2', price: '50,40 €', when: 'App WienMobil, inizio lun 23. Nominativo, uno a testa.', link: 'https://shop.wienmobil.at/products/T7T31_VIE', site: 'shop.wienmobil.at' },
+  { id: 'sisi', name: 'Sisi Pass ×2', price: '120 €', when: 'Slot Schönbrunn: mer 25 alle 13:30. Sisi Museum e Museo del Mobile senza orario.', link: 'https://www.imperialtickets.com/it/castello-di-schoenbrunn/sisi-pass/247', site: 'imperialtickets.com' },
+  { id: 'belv', name: 'Belvedere Superiore ×2', price: '46 €', when: 'Slot mar 24 alle 16:00.', link: 'https://www.belvedere.at/en/tickets', site: 'belvedere.at' },
+  { id: 'mus', name: 'Musical, Kat. F ×2', price: '72 €', when: 'Die Schöne und das Biest, gio 26 alle 19:30. Ultimi posti.', link: 'https://www.musicalvienna.at/de/spielplan/100050/DIE-SCHOeNE-UND-DAS-BIEST', site: 'musicalvienna.at' },
+  { id: 'figl', name: 'Tavolo Figlmüller', price: '—', when: 'Bäckerstraße, mar 24 alle 21:30. Tel. +43 1 512 17 60.', link: 'https://www.figlmueller.at/baeckerstrasse/reservieren/', site: 'figlmueller.at' },
+  { id: 'parl', name: 'Visita al Parlamento', price: 'gratis', when: 'Mar 24 verso le 14. Documento con foto.', link: 'https://www.parlament.gv.at/erleben/fuehrungen/einzelpersonen/', site: 'parlament.gv.at' },
+  { id: 'brat', name: 'Bratislava-Ticket ×2', price: '36 €', when: 'Gio 26, REX 09:14 da Wien Hbf. App o shop ÖBB.', link: 'https://www.oebb.at/en/regionale-angebote/ueberregionale-angebote/bratislava-ticket', site: 'oebb.at' },
+  { id: 'aero', name: 'Tratta aeroporto ×4', price: '≈9,20 €', when: 'Andata lun 23 e ritorno ven 27: il 7 Tage WIEN non copre questo tratto.', link: 'https://www.oebb.at/en/tickets-kundenkarten', site: 'oebb.at' }
+];
+
+// ---------- Utilità ----------
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const maps = (dest, mode) => 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(dest) + '&travelmode=' + (mode || 'transit');
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('vienna:' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('vienna:' + k, JSON.stringify(v)); } catch (e) {} }
+};
+const ICON = {
+  pin: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
+  house: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>',
+  arrow: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  ext: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg>',
+  check: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  tabHome: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>',
+  tabDay: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  tabFood: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 21V3c-2 1-3 3.5-3 7h3"/></svg>',
+  tabTicket: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a2 2 0 0 0 0 4v5h18v-5a2 2 0 0 1 0-4V5H3z"/><path d="M14 5v12" stroke-dasharray="2 2"/></svg>',
+  tabInfo: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>'
+};
+
+// Giorno del viaggio in base alla data (ora di Vienna): 0 = prima, 1–5 = durante, 6 = dopo
+function tripDay() {
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Vienna', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  if (parts < '2026-11-23') return 0;
+  if (parts > '2026-11-27') return 6;
+  return Number(parts.slice(8, 10)) - 22;
+}
+function daysLeft() {
+  const now = new Date(); const start = new Date('2026-11-23T00:00:00+01:00');
+  return Math.max(0, Math.ceil((start - now) / 86400000));
+}
+const defaultDay = () => { const t = tripDay(); return t === 0 ? 1 : t === 6 ? 1 : t; };
+
+// ---------- Schermate ----------
+function header(kicker, title, extra) {
+  return `<header class="hdr"><div class="hdr-row"><div><p class="kicker">${esc(kicker)}</p><h1 class="h1">${esc(title)}</h1></div>
+    <a class="round" href="${maps(HOTEL, 'transit')}" aria-label="Torna in hotel">${ICON.house}</a></div>${extra || ''}</header>`;
+}
+function chips(route, active) {
+  return `<div class="chips" role="group" aria-label="Giorno">${DAYS.map((d) =>
+    `<button class="chip" type="button" data-go="#/${route}/${d.n}" aria-pressed="${d.n === active}"><span>${d.short}</span><b>${d.num}</b></button>`).join('')}</div>`;
+}
+function stepHtml(st) {
+  const col = COLORS[st.kind];
+  return `<div class="step"><div class="step-time"><b>${esc(st.time)}</b><span class="dot" style="background:${col}"></span></div>
+    <article class="card">
+      ${st.img ? `<img src="img/${st.img}.jpg" alt="${esc(st.title)}" loading="lazy" width="900" height="600">` : ''}
+      <p class="kind" style="color:${col}">${KIND[st.kind]}</p>
+      <h2>${esc(st.title)}</h2>
+      ${st.note ? `<p class="note">${esc(st.note)}</p>` : ''}
+      ${st.dest ? `<a class="btn" href="${maps(st.dest, st.mode)}" target="_blank" rel="noopener">${ICON.pin}${esc(st.label || (st.mode === 'walking' ? 'A piedi, portami lì' : 'Mezzi, portami lì'))}</a>` : ''}
+    </article></div>`;
+}
+
+function viewHome() {
+  const t = tripDay();
+  const d = DAYS[(t >= 1 && t <= 5 ? t : 1) - 1];
+  let kicker, badge, cta;
+  if (t === 0) { const n = daysLeft(); kicker = 'Si parte tra poco'; badge = n === 1 ? 'manca 1 giorno' : `mancano ${n} giorni`; cta = 'Vedi il primo giorno'; }
+  else if (t === 6) { kicker = 'Viaggio concluso'; badge = 'bentornati'; cta = 'Rivedi l’itinerario'; }
+  else { kicker = 'Oggi'; badge = `giorno ${t} di 5`; cta = 'Apri il programma di oggi'; }
+  const tops = d.steps.filter((x) => x.img && x.kind !== 'viaggio').slice(0, 3);
+  return `<section class="home">
+    <svg width="100%" height="300" viewBox="0 0 390 300" preserveAspectRatio="xMaxYMin slice" fill="none" aria-hidden="true" style="position:absolute;left:0;top:0">
+      <g stroke="#D4AF5F" stroke-opacity=".18" stroke-width="1.5" stroke-linecap="round"><path d="M318 40v36M300 58h36M305 45l26 26M331 45l-26 26"/><path d="M352 120v20M342 130h20M345 123l14 14M359 123l-14 14"/><path d="M270 96v14M263 103h14"/></g>
+      <path d="M0 300V262h22v-14h10v14h14v-30l10-18 10 18v30h12v-22h28v-10l8-6 8 6v10h22v22h10v-44l7-30 7 30v44h14v-16h24v-12l14-10 14 10v12h22v16h12v-34h10l6-20 6 20h10v34h16v-18h30v18h22v38z" fill="#2A3146"/>
+    </svg>
+    <div class="home-inner">
+      <div><p class="kicker">23–27 novembre 2026</p><h1>Vienna</h1><p class="sub">mercatini, Sissi e una gita a Bratislava</p></div>
+      <div class="today" style="margin-top:24px">
+        <img src="img/${d.heroImg}.jpg" alt="${esc(d.title)}" width="900" height="600">
+        <div class="row" style="align-items:center"><p class="kicker" style="color:var(--gold-d)">${esc(kicker)}</p><span class="badge">${esc(badge)}</span></div>
+        <h2>${esc(d.title)}</h2>
+        <p class="note">${esc(d.label.split(' · ')[1])}</p>
+        <div class="tops">${tops.map((x) => `<div><b>${esc(x.time)}</b><span>${esc(x.title)}</span></div>`).join('')}</div>
+        <a class="cta" href="#/giorno/${d.n}">${esc(cta)} ${ICON.arrow}</a>
+      </div>
+      <div class="quick">
+        <a href="${maps(HOTEL, 'transit')}" target="_blank" rel="noopener">${ICON.house}Torna in hotel</a>
+        <a href="#/mangiare/${d.n}">${ICON.tabFood}Mangiare</a>
+        <a href="#/biglietti">${ICON.tabTicket}Biglietti</a>
+      </div>
+      <p class="foot">Hotel Korotan · ${esc(HOTEL)}</p>
+    </div></section>`;
+}
+
+function viewDay(n) {
+  const d = DAYS[n - 1] || DAYS[0];
+  const planB = d.planB && store.get('planB', false);
+  const steps = planB ? d.planB.steps : d.steps;
+  const alert = planB ? d.planB.alert : d.alert;
+  const title = planB ? 'Piano B: Vienna e Klanglicht' : d.title;
+  const toggle = d.planB ? `<div class="toggle" role="group" aria-label="Programma del giorno">
+      <button type="button" data-planb="0" aria-pressed="${!planB}">Bratislava</button>
+      <button type="button" data-planb="1" aria-pressed="${!!planB}">Piano B a Vienna</button></div>` : '';
+  return header(d.label, title, chips('giorno', d.n)) +
+    `<div class="content">${toggle}${alert ? `<div class="alert">${esc(alert)}</div>` : ''}${steps.map(stepHtml).join('')}</div>`;
+}
+
+function viewFood(n) {
+  const f = FOOD[n - 1] || FOOD[0];
+  return header('Dove mangiare', f.title, chips('mangiare', n)) + `<div class="content">
+    <a class="linkcard" href="https://www.mittag.at/" target="_blank" rel="noopener"><span><b>Menu di oggi su mittag.at</b><small>Il Mittagsmenü cambia ogni giorno, lun–ven</small></span>${ICON.ext}</a>
+    ${f.places.map((x) => `<article class="card"><div class="row"><h3>${esc(x.name)}</h3><span class="price">${esc(x.price)}</span></div>
+      <p class="note">${esc(x.note)}</p>
+      <div class="row" style="align-items:center"><span class="meta">${esc(x.walk.toUpperCase())}</span>
+      <a class="btn" href="${maps(x.dest, 'walking')}" target="_blank" rel="noopener">${ICON.pin}Portami lì</a></div></article>`).join('')}
+    <p class="small">Prezzi letti su mittag.at il 28/10/2026, indicativi. Bevande escluse.</p></div>`;
+}
+
+function viewTickets() {
+  const done = store.get('done', {});
+  const count = TICKETS.filter((x) => done[x.id]).length;
+  return `<header class="hdr"><div><p class="kicker">Biglietti e prenotazioni</p><h1 class="h1">${count} di ${TICKETS.length} fatti</h1></div>
+      <div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="${TICKETS.length}" aria-valuenow="${count}" aria-label="Prenotazioni fatte"><i style="width:${Math.round(count / TICKETS.length * 100)}%"></i></div>
+      <p class="small" style="color:#C9CDD8">Spesa prevista in due: ≈ 334 € tra biglietti e mezzi</p></header>
+    <div class="content">${TICKETS.map((x) => { const on = !!done[x.id]; return `<article class="card ${on ? 'done' : ''}" style="flex-direction:row;gap:12px;align-items:flex-start">
+      <button class="tick" type="button" data-tick="${x.id}" aria-pressed="${on}" aria-label="${on ? 'Segna come da fare' : 'Segna come fatto'}: ${esc(x.name)}">${on ? ICON.check : ''}</button>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><div class="row"><h3>${esc(x.name)}</h3><span class="price">${esc(x.price)}</span></div>
+      <p class="note">${esc(x.when)}</p><a class="ext" href="${x.link}" target="_blank" rel="noopener">${esc(x.site)} ${ICON.ext}</a></div></article>`; }).join('')}
+    <p class="small">Le spunte restano salvate su questo telefono.</p></div>`;
+}
+
+function viewInfo() {
+  return header('Info utili', 'Da tenere a portata di mano') + `<div class="content info">
+    <p class="sec">Hotel</p>
+    <article class="card"><h3>Hotel Korotan</h3><p class="note">${esc(HOTEL)} · 8° distretto (Josefstadt). Fermate vicine: tram 2 Albertgasse, U6 Josefstädter Straße.</p>
+      <a class="btn" href="${maps(HOTEL, 'transit')}" target="_blank" rel="noopener">${ICON.pin}Portami in hotel</a></article>
+    <p class="sec">Emergenze</p>
+    <article class="card"><h3>112 · numero unico europeo</h3><p class="note">Ambulanza 144 · Polizia 133 · Vigili del fuoco 122.</p>
+      <a class="btn" href="tel:112">Chiama il 112</a></article>
+    <p class="sec">App da avere</p>
+    <article class="card"><h3>WienMobil</h3><p class="note">Biglietti dei mezzi e orari in tempo reale.</p>
+      <div class="row" style="justify-content:flex-start;gap:16px"><a class="ext" href="https://apps.apple.com/at/app/wienmobil/id1107918142" target="_blank" rel="noopener">iPhone ${ICON.ext}</a><a class="ext" href="https://play.google.com/store/apps/details?id=at.wienerlinien.wienmobillab" target="_blank" rel="noopener">Android ${ICON.ext}</a></div></article>
+    <article class="card"><h3>ÖBB</h3><p class="note">Bratislava-Ticket e biglietto della tratta aeroporto.</p><a class="ext" href="https://www.oebb.at/en/tickets-kundenkarten" target="_blank" rel="noopener">oebb.at ${ICON.ext}</a></article>
+    <p class="sec">Budget in due</p>
+    <article class="card"><p class="note">Mezzi ≈60 € · Sisi Pass e Belvedere 166 € · Bratislava 36 € · Musical Kat. F 72 € · Cibo 300–330 €.<br><b>Totale ≈ 634–664 €</b>. Con i Mittagsmenü a pranzo ≈ 594–624 €.</p></article>
+    <p class="sec">Come installarla</p>
+    <article class="card"><p class="note"><b>iPhone:</b> in Safari tocca Condividi → “Aggiungi a schermata Home”.<br><b>Android:</b> in Chrome menu ⋮ → “Installa app”. Dopo la prima apertura funziona anche offline, tranne Google Maps e i siti esterni.</p></article>
+    <p class="sec">Crediti foto</p>
+    <p class="small">Foto da Wikimedia Commons con licenza libera dei rispettivi autori (CC0, CC BY, CC BY-SA), tra cui: Hubertl (Palazzo di Giustizia, CC BY-SA 4.0), Aciarium (Parlamento, CC BY 4.0), Gugerell (Museo del Mobile, CC0), Hiroki Ogawa (Duomo di San Martino, CC BY 3.0), Arne Müseler (aeroporto, CC BY-SA 3.0 de), Werckmeister (Hauptbahnhof, CC BY-SA 3.0). Dati verificati il 27–28 ottobre 2026: ricontrolla orari e prezzi prima di partire.</p>
+  </div>`;
+}
+
+// ---------- Router ----------
+const view = document.getElementById('view');
+const tabs = document.getElementById('tabs');
+function route() {
+  const [, name, arg] = (location.hash || '#/').split('/');
+  const n = Math.min(5, Math.max(1, Number(arg) || defaultDay()));
+  let html, tab;
+  if (name === 'giorno') { html = viewDay(n); tab = 'giorno'; }
+  else if (name === 'mangiare') { html = viewFood(n); tab = 'mangiare'; }
+  else if (name === 'biglietti') { html = viewTickets(); tab = 'biglietti'; }
+  else if (name === 'info') { html = viewInfo(); tab = 'info'; }
+  else { html = viewHome(); tab = 'home'; }
+  document.body.style.background = tab === 'home' ? 'var(--navy)' : 'var(--cream)';
+  view.innerHTML = html;
+  const items = [['home', '#/', 'Inizio', ICON.tabHome], ['giorno', `#/giorno/${n}`, 'Giorno', ICON.tabDay], ['mangiare', `#/mangiare/${n}`, 'Mangiare', ICON.tabFood], ['biglietti', '#/biglietti', 'Biglietti', ICON.tabTicket], ['info', '#/info', 'Info', ICON.tabInfo]];
+  tabs.innerHTML = items.map(([id, href, label, ic]) => `<a href="${href}"${id === tab ? ' aria-current="page"' : ''}>${ic}${label}</a>`).join('');
+}
+document.addEventListener('click', (e) => {
+  const go = e.target.closest('[data-go]');
+  if (go) { location.replace(go.dataset.go); return; }
+  const pb = e.target.closest('[data-planb]');
+  if (pb) { store.set('planB', pb.dataset.planb === '1'); route(); return; }
+  const tk = e.target.closest('[data-tick]');
+  if (tk) { const d = store.get('done', {}); d[tk.dataset.tick] = !d[tk.dataset.tick]; store.set('done', d); route(); const b = document.querySelector(`[data-tick="${tk.dataset.tick}"]`); if (b) b.focus(); }
+});
+window.addEventListener('hashchange', () => { route(); window.scrollTo(0, 0); });
+route();
+
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
