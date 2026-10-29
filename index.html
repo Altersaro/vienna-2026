@@ -135,8 +135,8 @@ const DAYS = [
   { n: 1, short: 'LUN', num: '23', label: 'Giorno 1 · lunedì 23 novembre', title: 'Arrivo e mercatino del Rathaus', heroImg: 'stephansdom',
     alert: 'Compra il biglietto della tratta aeroporto (≈2,30 €) e attiva il 7 Tage WIEN da oggi.',
     steps: [
-      ride(s('11:40', 'viaggio', 'Dall’aeroporto all’hotel', 'Atterraggio a Vienna (VIE). Railjet fino a Meidling, poi U6. Dal 7 settembre 2026 S7 e REX 7 non attraversano più il centro per lavori: prendete il Railjet.', HOTEL, 'transit', 'aeroporto', 'Verso l’hotel'),
-        leg('Railjet', 'Flughafen Wien', 'Wien Meidling', 'Diretto, 2 all’ora, circa 30 min. Vanno bene anche gli IC.'),
+      ride(s('11:40', 'viaggio', 'Dall’aeroporto all’hotel', 'Atterraggio a Vienna (VIE). REX 7 fino a Meidling, poi U6. Non prendete la S7: per i lavori arriva solo a St. Marx.', HOTEL, 'transit', 'aeroporto', 'Verso l’hotel'),
+        leg('REX 7', 'Flughafen Wien', 'Wien Meidling', 'Direzione Mödling, 31 min. Esempio: partenza 12:16, arrivo 12:47. Vanno bene anche Railjet e IC per Meidling.'),
         leg('U6', 'Bahnhof Meidling', 'Alser Straße', 'Direzione Floridsdorf, 8 fermate.'),
         HOTEL_WALK),
       s('13:00', 'visita', 'Hotel Korotan: check-in o bagagli', HOTEL),
@@ -187,7 +187,7 @@ const DAYS = [
     steps: [
       ride(s('09:14', 'viaggio', 'Partenza per Bratislava', 'REX delle 9:14 da Wien Hbf, arrivo 10:10. Bratislava-Ticket: vale anche su bus e tram in città.', 'Wien Hauptbahnhof', 'transit', 'hbf'),
         leg('13A', 'Alser Straße, Skodagasse', 'Hauptbahnhof', 'Direzione Hauptbahnhof, fino al capolinea. Partite verso le 8:20.'),
-        leg('REX', 'Wien Hbf', 'Bratislava', 'Treno delle 9:14, arrivo 10:10. Controllate sul tabellone la stazione di arrivo.')),
+        leg('REX', 'Wien Hbf', 'Bratislava hl. st.', 'Treno delle 9:14, arrivo verso le 10:10.')),
       about(s('10:30', 'visita', 'Centro storico e Duomo di San Martino', null, 'Hlavné námestie, Bratislava', 'walking', 'duomo-bratislava'),
         'Cattedrale gotica dove tra il 1563 e il 1830 furono incoronati i re e le regine d’Ungheria, tra cui Maria Teresa nel 1741. In cima al campanile c’è una copia dorata della corona di Santo Stefano.'),
       s('12:00', 'cibo', 'Pranzo: denné menu', 'Zuppa e secondo 7–12 €. Vedi “Mangiare”.', 'Drevená 8, Bratislava', 'walking'),
