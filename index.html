@@ -55,6 +55,7 @@ main{flex:1;padding-bottom:calc(84px + var(--safe-b))}
 .kind{margin:0;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
 .card h2,.card h3{margin:0;font-size:16px;line-height:1.3;font-weight:700}
 .note{margin:0;font-size:14px;line-height:1.45;color:var(--muted)}
+.desc{margin:0;padding-left:10px;border-left:3px solid var(--gold);font-size:14px;line-height:1.5;color:var(--ink)}
 .btn{align-self:flex-start;min-height:44px;padding:0 16px;border-radius:22px;background:var(--navy);color:var(--cream);font-size:14px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer}
 .btn svg{flex:none}
 .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
@@ -114,15 +115,18 @@ const KIND = { viaggio: 'Spostamento', visita: 'Da vedere', cibo: 'Mangiare', se
 
 // s(ora, tipo, titolo, nota, destinazione per Maps, modo, foto, etichetta pulsante)
 const s = (time, kind, title, note, dest, mode, img, label) => ({ time, kind, title, note, dest, mode: mode || 'transit', img, label });
+// aggiunge a una tappa una breve descrizione storica (chiese e monumenti)
+const about = (step, desc) => Object.assign(step, { desc });
 
 const DAYS = [
   { n: 1, short: 'LUN', num: '23', label: 'Giorno 1 · lunedì 23 novembre', title: 'Arrivo e mercatino del Rathaus', heroImg: 'stephansdom',
     alert: 'Compra il biglietto della tratta aeroporto (≈2,30 €) e attiva il 7 Tage WIEN da oggi.',
     steps: [
-      s('11:40', 'viaggio', 'Atterraggio a Vienna (VIE)', 'REX 7 fino a Meidling, poi U6 fino a Josefstädter Straße.', HOTEL, 'transit', 'aeroporto', 'Verso l’hotel'),
+      s('11:40', 'viaggio', 'Dall’aeroporto all’hotel', 'Atterraggio a Vienna (VIE). REX 7 fino a Meidling, poi U6 fino a Josefstädter Straße.', HOTEL, 'transit', 'aeroporto', 'Verso l’hotel'),
       s('13:00', 'visita', 'Hotel Korotan: check-in o bagagli', HOTEL),
       s('13:30', 'cibo', 'Pranzo: Prinz Ferdinand', 'Mittagsmenü a 4 min a piedi. Schnitzel con zuppa ≈14,90 €.', 'Bennoplatz 2, 1080 Wien', 'walking', 'schnitzel'),
-      s('15:00', 'visita', 'Stephansdom → Graben → Kohlmarkt → MQ', 'Tram 43 + bus 1A fino a Stephansplatz, poi tutto a piedi. Navata del Duomo gratis.', 'Stephansplatz, 1010 Wien', 'transit', 'stephansdom'),
+      about(s('15:00', 'visita', 'Stephansdom → Graben → Kohlmarkt → MQ', 'Tram 43 + bus 1A fino a Stephansplatz, poi tutto a piedi. Navata del Duomo gratis.', 'Stephansplatz, 1010 Wien', 'transit', 'stephansdom'),
+        'Il Duomo di Santo Stefano è il simbolo di Vienna. È gotico, con la torre sud alta circa 136 m: in cima si arriva con 343 gradini. Le tegole colorate del tetto disegnano l’aquila bicipite degli Asburgo e gli stemmi di Vienna e dell’Austria. Nella torre nord c’è la Pummerin, la grande campana rifusa dopo l’incendio del 1945.'),
       s('19:00', 'serata', 'Christkindlmarkt al Rathausplatz', 'Cena tra le bancarelle: gulasch, salsicce, punch.', 'Rathausplatz, 1010 Wien', 'walking', 'rathaus')
     ]},
   { n: 2, short: 'MAR', num: '24', label: 'Giorno 2 · martedì 24 novembre', title: 'Sissi, Parlamento e Figlmüller', heroImg: 'belvedere',
@@ -133,7 +137,8 @@ const DAYS = [
       s('14:00', 'visita', 'Parlamento, visita gratuita', '7 min a piedi. Serve un documento con foto.', 'Parlament, Dr.-Karl-Renner-Ring 3, 1010 Wien', 'walking', 'parlament'),
       s('15:00', 'cibo', 'Caffè storico: Sacher o Demel', 'Tram 1 da Parlament a Oper/Karlsplatz.', 'Café Sacher, Philharmoniker Straße 4, 1010 Wien', 'transit', 'sachertorte'),
       s('16:00', 'visita', 'Belvedere Superiore · slot 16:00', 'Tram D fino a Schloss Belvedere. Il Bacio di Klimt. Chiude alle 18.', 'Oberes Belvedere, Prinz-Eugen-Straße 27, 1030 Wien', 'transit', 'belvedere'),
-      s('18:00', 'serata', 'Karlskirche e mercatino Art Advent', '18 min a piedi, in discesa nei giardini.', 'Karlsplatz, 1040 Wien', 'walking', 'karlskirche'),
+      about(s('18:00', 'serata', 'Karlskirche e mercatino Art Advent', '18 min a piedi, in discesa nei giardini.', 'Karlsplatz, 1040 Wien', 'walking', 'karlskirche'),
+        'La chiesa di San Carlo Borromeo è un capolavoro del barocco viennese. Nel 1713, durante l’ultima grande peste, l’imperatore Carlo VI promise di costruirla. La progettò Fischer von Erlach. Davanti alla facciata ci sono due colonne con scene della vita del santo, e la cupola è affrescata da Rottmayr. Di solito chiude alle 18 (ingresso 9,50 €): la sera resta il mercatino sulla piazza.'),
       s('21:30', 'cibo', 'Tavolo da Figlmüller', 'U1 fino a Stephansplatz. La cucina chiude alle 22: ordina subito.', 'Figlmüller, Bäckerstraße 6, 1010 Wien', 'transit', 'schnitzel')
     ]},
   { n: 3, short: 'MER', num: '25', label: 'Giorno 3 · mercoledì 25 novembre', title: 'Schönbrunn, dal pomeriggio alla sera', heroImg: 'schoenbrunn',
@@ -144,17 +149,18 @@ const DAYS = [
       s('13:30', 'visita', 'Palazzo di Schönbrunn · slot 13:30', '14 min a piedi da Hietzing.', 'Schloss Schönbrunn, 1130 Wien', 'walking', 'schoenbrunn'),
       s('14:45', 'visita', 'Giardini e Gloriette', 'Salita gratuita, vista su Vienna. Sali prima del tramonto.', 'Gloriette, 1130 Wien', 'walking', 'gloriette'),
       s('16:30', 'serata', 'Mercatino di Schönbrunn e cena', 'Nel cortile davanti al palazzo, aperto fino alle 21.', null, null, 'mercatino-schoenbrunn'),
-      s('19:30', 'viaggio', 'Rientro in hotel', 'U4 + U6, circa 35 min.', HOTEL, 'transit', null, 'Verso l’hotel')
+      s('19:30', 'viaggio', 'Ritorno in hotel', 'U4 + U6, circa 35 min.', HOTEL, 'transit', null, 'Verso l’hotel')
     ]},
   { n: 4, short: 'GIO', num: '26', label: 'Giorno 4 · giovedì 26 novembre', title: 'Bratislava e musical', heroImg: 'castello-bratislava',
     alert: 'Treno di ritorno alle 17:16 da Petržalka: non perderlo, il musical inizia alle 19:30.',
     steps: [
-      s('09:14', 'viaggio', 'REX da Wien Hbf a Bratislava', 'Arrivo 10:10. Bratislava-Ticket: vale anche su bus e tram in città.', 'Wien Hauptbahnhof', 'transit', 'hbf'),
-      s('10:30', 'visita', 'Centro storico e Duomo di San Martino', null, 'Hlavné námestie, Bratislava', 'walking', 'duomo-bratislava'),
+      s('09:14', 'viaggio', 'Partenza per Bratislava', 'REX delle 9:14 da Wien Hbf, arrivo 10:10. Bratislava-Ticket: vale anche su bus e tram in città.', 'Wien Hauptbahnhof', 'transit', 'hbf'),
+      about(s('10:30', 'visita', 'Centro storico e Duomo di San Martino', null, 'Hlavné námestie, Bratislava', 'walking', 'duomo-bratislava'),
+        'Cattedrale gotica dove tra il 1563 e il 1830 furono incoronati i re e le regine d’Ungheria, tra cui Maria Teresa nel 1741. In cima al campanile c’è una copia dorata della corona di Santo Stefano.'),
       s('12:00', 'cibo', 'Pranzo: denné menu', 'Zuppa e secondo 7–12 €. Vedi “Mangiare”.', 'Drevená 8, Bratislava', 'walking'),
       s('13:15', 'visita', 'Castello e terrazze', 'Terrazze gratis, museo circa 10 €.', 'Bratislavský hrad, Bratislava', 'walking', 'castello-bratislava'),
       s('15:15', 'serata', 'Mercatino e cena presto', 'Hlavné námestie: primo giorno di apertura.', null, null, 'mercatino-bratislava'),
-      s('17:16', 'viaggio', 'REX da Petržalka a Wien Hbf', 'Bus 94 da Zochova alle 17:09. Arrivo a Vienna 18:15, poi U1 + U6.', 'Bratislava-Petržalka railway station', 'transit'),
+      s('17:16', 'viaggio', 'Rientro a Vienna', 'Bus 94 da Zochova alle 17:09, poi REX delle 17:16 da Petržalka a Wien Hbf. Arrivo 18:15, poi U1 + U6.', 'Bratislava-Petržalka railway station', 'transit'),
       s('19:30', 'serata', 'Die Schöne und das Biest', 'Raimund Theater, Wallgasse 18–20. Kat. F. Fine ≈22:00.', 'Raimund Theater, Wallgasse 18, 1060 Wien', 'transit', 'raimund')
     ],
     planB: {
@@ -173,8 +179,8 @@ const DAYS = [
     steps: [
       s('09:30', 'visita', 'Naschmarkt e Mariahilfer Straße', 'Tram 2 fino a Oper/Karlsplatz.', 'Naschmarkt, 1060 Wien', 'transit', 'naschmarkt'),
       s('12:30', 'cibo', 'Pranzo: Steman o Bierhalle', 'Steman: zuppa e secondo 14 €.', 'Otto-Bauer-Gasse 7, 1060 Wien'),
-      s('13:15', 'viaggio', 'Ritiro bagagli in hotel', null, HOTEL, 'transit', null, 'Verso l’hotel'),
-      s('14:31', 'viaggio', 'Railjet da Meidling all’aeroporto', 'U6 fino a Meidling, 26 min di treno.', 'Flughafen Wien-Schwechat', 'transit'),
+      s('13:15', 'viaggio', 'Ritorno in hotel per i bagagli', null, HOTEL, 'transit', null, 'Verso l’hotel'),
+      s('14:31', 'viaggio', 'Verso l’aeroporto', 'U6 fino a Meidling, poi Railjet delle 14:31: 26 min di treno.', 'Flughafen Wien-Schwechat', 'transit'),
       s('17:15', 'viaggio', 'Volo di ritorno', 'In aeroporto dalle 15:15.', null, null, 'aeroporto')
     ]}
 ];
@@ -262,6 +268,7 @@ function stepHtml(st) {
       <p class="kind" style="color:${col}">${KIND[st.kind]}</p>
       <h2>${esc(st.title)}</h2>
       ${st.note ? `<p class="note">${esc(st.note)}</p>` : ''}
+      ${st.desc ? `<p class="desc">${esc(st.desc)}</p>` : ''}
       ${st.dest ? `<a class="btn" href="${maps(st.dest, st.mode)}" target="_blank" rel="noopener">${ICON.pin}${esc(st.label || (st.mode === 'walking' ? 'A piedi, portami lì' : 'Mezzi, portami lì'))}</a>` : ''}
     </article></div>`;
 }
