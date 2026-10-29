@@ -1,5 +1,5 @@
 // Cache dell'app per l'uso offline. Cambia VERSION a ogni aggiornamento.
-const VERSION = 'vienna-v6';
+const VERSION = 'vienna-v7';
 const FILES = [
   './', './index.html', './manifest.webmanifest',
   './icon-192.png', './icon-512.png', './apple-touch-icon.png',
