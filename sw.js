@@ -1,5 +1,5 @@
 // Cache dell'app per l'uso offline. Cambia VERSION a ogni aggiornamento.
-const VERSION = 'vienna-v7';
+const VERSION = 'vienna-v8';
 const FILES = [
   './', './index.html', './manifest.webmanifest',
   './icon-192.png', './icon-512.png', './apple-touch-icon.png',
@@ -9,7 +9,8 @@ const FILES = [
   './img/mercatino-bratislava.jpg', './img/mercatino-schoenbrunn.jpg', './img/moebel.jpg',
   './img/naschmarkt.jpg', './img/parlament.jpg', './img/raimund.jpg', './img/rathaus.jpg',
   './img/riesenrad.jpg', './img/sachertorte.jpg', './img/schnitzel.jpg',
-  './img/schoenbrunn.jpg', './img/stephansdom.jpg'
+  './img/schoenbrunn.jpg', './img/stephansdom.jpg',
+  './img/mercatino-stephansplatz.jpg', './img/mercatino-karlsplatz.jpg', './img/mercatino-spittelberg.jpg', './img/klanglicht.jpg'
 ];
 
 self.addEventListener('install', (e) => {
