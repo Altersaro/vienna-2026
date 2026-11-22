@@ -487,7 +487,7 @@ function viewWallet() {
       <span class="lbl" id="w-lbl">Quando si usa</span>
       <div class="pick" id="w-days" data-val="0" role="group" aria-labelledby="w-lbl"><button class="all" type="button" data-wday="0" aria-pressed="true">Tutti i giorni (abbonamenti)</button>${DAYS.map((d) => `<button type="button" data-wday="${d.n}" aria-pressed="false"><span>${d.short}</span><b>${d.num}</b></button>`).join('')}</div>
       <label class="btn">Scegli screenshot o PDF<input type="file" accept="image/*,application/pdf" hidden id="w-file"></label>
-      <p class="small" id="w-status">Con un PDF l’app ritaglia da sola il codice e lo mostra grande, con i dati sotto. Serve internet solo la prima volta.</p></article>
+      <p class="small" id="w-status">Con un PDF o uno screenshot l’app ritaglia da sola il codice e lo mostra grande, con i dati sotto. Per i PDF serve internet la prima volta.</p></article>
     <p class="small">I file restano salvati solo su questo telefono, non vengono caricati online. Tocca un QR per ingrandirlo. Se cancelli i dati di Safari vanno aggiunti di nuovo.</p></div>`;
 }
 async function hydrateWallet() {
@@ -557,6 +557,42 @@ function findCode(lum, W, H) {
   return { x: X0, y: Y0, w: X1 - X0 + 1, h: Y1 - Y0 + 1 };
 }
 const cvBlob = (cv, type, q) => new Promise((r) => cv.toBlob(r, type, q));
+// ritaglia codice e dati da un'immagine già disegnata su canvas e salva il biglietto
+async function saveFromCanvas(cv, label, day, pdf, idx, requireCode) {
+  const W = cv.width, H = cv.height, px = cv.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, W, H).data, lum = new Uint8ClampedArray(W * H);
+  for (let k = 0; k < W * H; k++) lum[k] = (px[4 * k] * 0.299 + px[4 * k + 1] * 0.587 + px[4 * k + 2] * 0.114) | 0;
+  const code = findCode(lum, W, H);
+  if (!code && requireCode) return false;
+  let X0 = W, Y0 = H, X1 = 0, Y1 = 0;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (lum[y * W + x] < 240) { if (x < X0) X0 = x; if (x > X1) X1 = x; if (y < Y0) Y0 = y; if (y > Y1) Y1 = y; }
+  if (X1 <= X0 || Y1 <= Y0) return false;
+  const m = 16, iw = X1 - X0 + 1 + 2 * m, ih = Y1 - Y0 + 1 + 2 * m;
+  const ic = document.createElement('canvas'); ic.width = iw; ic.height = ih;
+  const ictx = ic.getContext('2d'); ictx.fillStyle = '#fff'; ictx.fillRect(0, 0, iw, ih); ictx.drawImage(cv, X0, Y0, iw - 2 * m, ih - 2 * m, m, m, iw - 2 * m, ih - 2 * m);
+  const infoBlob = await cvBlob(ic, 'image/jpeg', 0.92); let qrBlob = null;
+  if (code) {
+    const qm = Math.round(code.w * 0.08), qw = code.w + 2 * qm, qh = code.h + 2 * qm;
+    const qc = document.createElement('canvas'); qc.width = qw; qc.height = qh;
+    const qctx = qc.getContext('2d'); const out = qctx.createImageData(qw, qh); out.data.fill(255);
+    for (let y = 0; y < code.h; y++) for (let x = 0; x < code.w; x++) { const v = lum[(code.y + y) * W + code.x + x] < 140 ? 0 : 255, t = 4 * ((y + qm) * qw + x + qm); out.data[t] = out.data[t + 1] = out.data[t + 2] = v; }
+    qctx.putImageData(out, 0, 0); qrBlob = await cvBlob(qc, 'image/png');
+  }
+  const rec = { blob: qrBlob || infoBlob, info: qrBlob ? infoBlob : null, label, day, created: Date.now() + idx };
+  if (pdf) rec.pdf = pdf;
+  await qrSet('w-' + Date.now() + '-' + idx, rec);
+  return true;
+}
+// screenshot: se trova il codice lo ritaglia, altrimenti l'app salva l'immagine intera
+async function importImage(file, label, day) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error('immagine non leggibile')); im.src = url; });
+    const k = Math.min(1, 2400 / img.naturalWidth), cv = document.createElement('canvas');
+    cv.width = Math.round(img.naturalWidth * k); cv.height = Math.round(img.naturalHeight * k);
+    const ctx = cv.getContext('2d', { willReadFrequently: true }); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height); ctx.drawImage(img, 0, 0, cv.width, cv.height);
+    return await saveFromCanvas(cv, label, day, null, 0, true);
+  } finally { URL.revokeObjectURL(url); }
+}
 async function importPdf(file, name, day, say) {
   say('Apro il PDF…');
   const lib = await loadPdfJs();
@@ -568,26 +604,7 @@ async function importPdf(file, name, day, say) {
     const ctx = cv.getContext('2d', { willReadFrequently: true });
     ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
     await pg.render({ canvasContext: ctx, viewport: vp }).promise;
-    const W = cv.width, H = cv.height, px = ctx.getImageData(0, 0, W, H).data, lum = new Uint8ClampedArray(W * H);
-    for (let k = 0; k < W * H; k++) lum[k] = (px[4 * k] * 0.299 + px[4 * k + 1] * 0.587 + px[4 * k + 2] * 0.114) | 0;
-    // pagina ritagliata ai bordi del contenuto (i dati del biglietto)
-    let X0 = W, Y0 = H, X1 = 0, Y1 = 0;
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (lum[y * W + x] < 240) { if (x < X0) X0 = x; if (x > X1) X1 = x; if (y < Y0) Y0 = y; if (y > Y1) Y1 = y; }
-    if (X1 <= X0 || Y1 <= Y0) continue;
-    const m = 16, iw = X1 - X0 + 1 + 2 * m, ih = Y1 - Y0 + 1 + 2 * m;
-    const ic = document.createElement('canvas'); ic.width = iw; ic.height = ih;
-    const ictx = ic.getContext('2d'); ictx.fillStyle = '#fff'; ictx.fillRect(0, 0, iw, ih); ictx.drawImage(cv, X0, Y0, iw - 2 * m, ih - 2 * m, m, m, iw - 2 * m, ih - 2 * m);
-    const infoBlob = await cvBlob(ic, 'image/jpeg', 0.92);
-    // codice: bianco e nero netti, su fondo bianco con margine
-    const code = findCode(lum, W, H); let qrBlob = null;
-    if (code) {
-      const qm = Math.round(code.w * 0.08), qw = code.w + 2 * qm, qh = code.h + 2 * qm;
-      const qc = document.createElement('canvas'); qc.width = qw; qc.height = qh;
-      const qctx = qc.getContext('2d'); const out = qctx.createImageData(qw, qh); out.data.fill(255);
-      for (let y = 0; y < code.h; y++) for (let x = 0; x < code.w; x++) { const v = lum[(code.y + y) * W + code.x + x] < 140 ? 0 : 255, t = 4 * ((y + qm) * qw + x + qm); out.data[t] = out.data[t + 1] = out.data[t + 2] = v; }
-      qctx.putImageData(out, 0, 0); qrBlob = await cvBlob(qc, 'image/png');
-    }
-    await qrSet('w-' + Date.now() + '-' + i, { blob: qrBlob || infoBlob, info: qrBlob ? infoBlob : null, pdf: file, label: doc.numPages > 1 ? `${name} ${i}` : name, day, created: Date.now() + i });
+    await saveFromCanvas(cv, doc.numPages > 1 ? `${name} ${i}` : name, day, file, i, false);
   }
 }
 async function showPasses() {
@@ -833,7 +850,11 @@ document.addEventListener('change', async (e) => {
         await qrSet('w-' + Date.now(), { blob: file, label: typed || 'Biglietto', day, created: Date.now() });
       }
     } else {
-      await qrSet('w-' + Date.now(), { blob: file, label: typed || file.name.replace(/\.[^.]+$/, '') || 'Biglietto', day, created: Date.now() });
+      const label = typed || file.name.replace(/\.[^.]+$/, '') || 'Biglietto';
+      say('Cerco il codice nello screenshot…');
+      let ok = false;
+      try { ok = await importImage(file, label, day); } catch (err) { ok = false; }
+      if (!ok) await qrSet('w-' + Date.now(), { blob: file, label, day, created: Date.now() });
     }
     route(); return;
   }
