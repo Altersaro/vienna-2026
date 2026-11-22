@@ -96,7 +96,7 @@ main:has(.home){background:var(--navy)}
 .tops b{width:44px;flex:none;font-size:13px;color:var(--gold-d)}
 .cta{flex:none;min-height:50px;border-radius:25px;background:var(--navy);color:var(--cream);text-decoration:none;display:flex;align-items:center;justify-content:center;gap:10px;font-size:16px;font-weight:700}
 .quick{flex:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.quick a{min-height:60px;border-radius:16px;background:var(--navy2);color:var(--cream);text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:700;text-align:center}
+.quick a,.quick button{border:none;font:inherit;cursor:pointer;min-height:60px;border-radius:16px;background:var(--navy2);color:var(--cream);text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:700;text-align:center}
 /* Safari con le barre aperte (iPhone 14/15 ≈ 660 px utili): tolgo il superfluo per lasciare spazio alla foto */
 @media (max-height:720px){.home .sub,.tops div:nth-child(3){display:none}.home h1{font-size:40px}}
 .ext{display:inline-flex;align-items:center;gap:6px;min-height:36px;font-size:14px;font-weight:700;color:var(--gold-d)}
@@ -137,6 +137,8 @@ main:has(.home){background:var(--navy)}
 .pick button.all{grid-column:1/-1;min-height:44px;flex-direction:row;font-weight:700;font-size:14px}
 .pick button[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:var(--cream)}
 .pick button[aria-pressed="true"] span{color:var(--gold)}
+.fab{position:fixed;right:14px;bottom:calc(92px + var(--safe-b));z-index:6;min-height:48px;padding:0 16px;border-radius:24px;border:none;background:var(--gold);color:var(--navy);font:inherit;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+.fab[hidden]{display:none}
 /* nav */
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--card);border-top:1px solid var(--line);padding:6px 6px calc(10px + var(--safe-b))}
 /* Se iOS solleva la barra fissa, copre lo spazio rimasto sotto. */
@@ -154,6 +156,7 @@ nav.tabs a[aria-current="page"]{color:var(--ink);font-weight:700}
 <div class="app">
   <main id="view" tabindex="-1"></main>
   <nav class="tabs" aria-label="Sezioni"><div class="in" id="tabs"></div></nav>
+  <button class="fab" id="fab" type="button" data-passes hidden aria-label="Mostra gli abbonamenti dei mezzi">QR Abbonamenti</button>
 </div>
 
 <script>
@@ -404,7 +407,7 @@ function viewHome() {
       <div class="quick">
         <a href="${maps(HOTEL, 'transit')}" target="_blank" rel="noopener">${ICON.house}Torna in hotel</a>
         <a href="#/mangiare/${d.n}">${ICON.tabFood}Mangiare</a>
-        <a href="#/portafoglio">${ICON.tabQr}Portafoglio</a>
+        <button type="button" data-passes>${ICON.tabQr}Abbonamenti</button>
       </div>
     </div></section>`;
 }
@@ -482,12 +485,26 @@ function viewWallet() {
 async function hydrateWallet() {
   const box = document.getElementById('wallet-list'); if (!box) return;
   const items = await walletAll();
-  box.innerHTML = items.length ? items.map((it) => {
+  const card = (it) => {
     const url = URL.createObjectURL(it.blob);
     return `<article class="qr" style="margin-bottom:10px"><div class="row" style="width:100%"><h3>${esc(it.label)}</h3><span class="meta">${esc(dayTag(it.day))}</span></div>` +
       (isPdf(it) ? `<a class="btn" href="${url}" target="_blank" rel="noopener">Apri il PDF</a>` : `<img src="${url}" alt="${esc(it.label)}" data-zoom="${esc(it.label)}">`) +
       `<div class="acts"><button class="lnk" type="button" data-rename="${esc(it.key)}">Rinomina</button><button class="lnk" type="button" data-remove="${esc(it.key)}">Rimuovi</button></div></article>`;
-  }).join('') : '<p class="note">Ancora niente qui. Aggiungi i QR dei mezzi, il musical, il Belvedere e le carte d’imbarco.</p>';
+  };
+  const pass = items.filter((x) => x.day === 0), other = items.filter((x) => x.day !== 0);
+  box.innerHTML = items.length ? (pass.length ? '<p class="sec">Abbonamenti mezzi</p>' + pass.map(card).join('') : '') + (other.length ? '<p class="sec">Altri biglietti</p>' + other.map(card).join('') : '')
+    : '<p class="note">Ancora niente qui. Aggiungi i QR dei mezzi, il musical, il Belvedere e le carte d’imbarco.</p>';
+}
+async function showPasses() {
+  const items = (await walletAll()).filter((x) => x.day === 0);
+  if (!items.length) { location.hash = '#/portafoglio'; return; }
+  const z = document.createElement('div'); z.className = 'zoom'; z.style.cssText = 'justify-content:flex-start;overflow:auto;cursor:default;padding-top:calc(16px + var(--safe-t))';
+  z.innerHTML = '<button class="btn" type="button" data-close style="align-self:flex-end">Chiudi</button>' + items.map((it) => {
+    const url = URL.createObjectURL(it.blob);
+    return `<p>${esc(it.label)}</p>` + (isPdf(it) ? `<a class="btn" href="${url}" target="_blank" rel="noopener">Apri il PDF</a>` : `<img src="${url}" alt="${esc(it.label)}">`);
+  }).join('');
+  z.addEventListener('click', (e) => { if (e.target.closest('[data-close]')) z.remove(); });
+  document.body.appendChild(z);
 }
 async function hydrateDayWallet(n) {
   const box = document.querySelector('[data-daywallet]'); if (!box) return;
@@ -550,7 +567,7 @@ const PHRASES = [
   { title: 'Restaurant', items: [
     ['A table for two, please.', 'Un tavolo per due, per favore.'], ['Do you have a table for two without a reservation?', 'Avete un tavolo per due senza prenotazione?'],
     ['I have a reservation for two.', 'Ho una prenotazione per due.'], ['Could we see the menu, please?', 'Possiamo vedere il menu?'], ['What do you recommend?', 'Cosa consiglia?'],
-    ['I’d like the schnitzel, please.', 'Vorrei la cotoletta, per favore.'], ['I have a food allergy. Does this contain nuts?', 'Ho un’allergia. Ci sono noci o frutta secca?'],
+    ['I’d like the schnitzel, please.', 'Vorrei la cotoletta, per favore.'], ['I’m allergic to berries. Does this contain berries?', 'Ho un’allergia ai frutti di bosco. Ce ne sono nel piatto?'],
     ['Is this vegetarian?', 'È vegetariano?'], ['Tap water, please.', 'Acqua del rubinetto, per favore.'], ['Could we have the bill, please?', 'Possiamo avere il conto?'],
     ['Can I pay by card?', 'Posso pagare con la carta?'], ['Keep the change.', 'Tenga il resto.'], ['Everything was delicious, thank you.', 'Era tutto squisito, grazie.'] ] },
   { title: 'Getting around', items: [
@@ -579,8 +596,8 @@ const CONVOS = [
     ['me', 'It’s under the name… (say your name).', 'È a nome… (di’ il tuo nome).'], ['them', 'Yes, I can see it. Your table is ready.', 'Sì, la vedo. Il vostro tavolo è pronto.'],
     ['me', 'Could we see the menu, please?', 'Possiamo vedere il menu?'], ['them', 'Certainly. I’ll bring it right away.', 'Certo, lo porto subito.'] ] },
   { title: 'Allergies and vegetarian food', role: 'Cameriere', lines: [
-    ['me', 'I have a food allergy. Does this contain nuts?', 'Ho un’allergia. Ci sono noci o frutta secca?'], ['them', 'Let me check with the kitchen.', 'Controllo con la cucina.'],
-    ['them', 'No, there are no nuts in this dish.', 'No, in questo piatto non ci sono noci.'], ['me', 'Is this vegetarian?', 'È vegetariano?'],
+    ['me', 'I’m allergic to berries. Does this contain berries?', 'Ho un’allergia ai frutti di bosco. Ce ne sono nel piatto?'], ['them', 'Let me check with the kitchen.', 'Controllo con la cucina.'],
+    ['them', 'No, there are no berries in this dish.', 'No, in questo piatto non ci sono frutti di bosco.'], ['me', 'Is this vegetarian?', 'È vegetariano?'],
     ['them', 'This one has meat, but the cheese dumplings are vegetarian.', 'Questo ha la carne, ma gli gnocchi al formaggio sono vegetariani.'], ['me', 'Then I’ll have the dumplings. Thank you.', 'Allora prendo gli gnocchi. Grazie.'] ] },
   { title: 'Paying the bill', role: 'Cameriere', lines: [
     ['me', 'Could we have the bill, please?', 'Possiamo avere il conto?'], ['them', 'Together or separately?', 'Insieme o separati?'],
@@ -678,6 +695,7 @@ function route() {
   else { html = viewHome(); tab = 'home'; }
   document.body.style.background = tab === 'home' ? 'var(--navy)' : 'var(--cream)';
   view.innerHTML = html;
+  const fab = document.getElementById('fab'); if (fab) fab.hidden = tab === 'home' || tab === 'portafoglio';
   if (tab === 'portafoglio') hydrateWallet();
   if (tab === 'giorno') hydrateDayWallet(n);
   const items = [['home', '#/', 'Inizio', ICON.tabHome], ['giorno', `#/giorno/${n}`, 'Giorno', ICON.tabDay], ['mangiare', `#/mangiare/${n}`, 'Mangiare', ICON.tabFood], ['itinerari', '#/itinerari', 'Itinerari', ICON.tabRoute], ['portafoglio', '#/portafoglio', 'Portafoglio', ICON.tabQr], ['info', '#/info', 'Altro', ICON.tabInfo]];
@@ -685,6 +703,7 @@ function route() {
 }
 document.addEventListener('click', async (e) => {
   const z = e.target.closest('[data-zoom]'); if (z) { showZoom(z.dataset.src || z.src, z.dataset.zoom); return; }
+  if (e.target.closest('[data-passes]')) { showPasses(); return; }
   const wd = e.target.closest('[data-wday]');
   if (wd) { const box = document.getElementById('w-days'); box.dataset.val = wd.dataset.wday; box.querySelectorAll('[data-wday]').forEach((b) => b.setAttribute('aria-pressed', String(b === wd))); return; }
   const cv = e.target.closest('[data-convo]'); if (cv) { const [i, j] = cv.dataset.convo.split('-'); const x = CONVOS[i].lines[j]; showText(x[1], x[2]); return; }
