@@ -139,6 +139,13 @@ main:has(.home){background:var(--navy)}
 .pick button[aria-pressed="true"] span{color:var(--gold)}
 .fab{position:fixed;right:14px;bottom:calc(92px + var(--safe-b));z-index:6;min-height:48px;padding:0 16px;border-radius:24px;border:none;background:var(--gold);color:var(--navy);font:inherit;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.3)}
 .fab[hidden]{display:none}
+.crisp{image-rendering:-webkit-optimize-contrast;image-rendering:pixelated}
+.thumb{width:56px;height:56px;flex:none;object-fit:contain;background:#fff;border-radius:8px;border:1px solid var(--line)}
+.thumb.pdf{display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted)}
+.linkcard.light{background:#fff;color:var(--ink);border:1px solid var(--line);justify-content:flex-start}
+.linkcard.light small{color:var(--muted)}
+.linkcard.light>span{flex:1;min-width:0}
+.tinfo{width:100%;border-radius:12px;border:1px solid var(--line);background:#fff}
 /* nav */
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--card);border-top:1px solid var(--line);padding:6px 6px calc(10px + var(--safe-b))}
 /* Se iOS solleva la barra fissa, copre lo spazio rimasto sotto. */
@@ -465,7 +472,7 @@ const qrDel = (k) => idb('readwrite', (st) => st.delete(k));
 async function walletAll() {
   try {
     const rows = await idb('readonly', (st) => { const out = []; const r = st.openCursor(); r.onsuccess = () => { const c = r.result; if (c) { out.push({ key: c.key, ...c.value }); c.continue(); } }; return { get result() { return out; } }; });
-    return (rows || []).filter((x) => x.blob).map((x) => ({ key: x.key, blob: x.blob, day: x.day || 0, created: x.created || 0,
+    return (rows || []).filter((x) => x.blob).map((x) => ({ key: x.key, blob: x.blob, info: x.info || null, pdf: x.pdf || null, day: x.day || 0, created: x.created || 0,
       label: x.label || (x.key === 'qr1' ? 'Abbonamento 1' : x.key === 'qr2' ? 'Abbonamento 2' : 'Biglietto') }))
       .sort((p, q) => p.created - q.created);
   } catch (e) { return []; }
@@ -479,21 +486,109 @@ function viewWallet() {
       <label class="lbl" for="w-name">Nome</label><input class="field" id="w-name" placeholder="Es. Musical, Belvedere, abbonamento di Anna">
       <span class="lbl" id="w-lbl">Quando si usa</span>
       <div class="pick" id="w-days" data-val="0" role="group" aria-labelledby="w-lbl"><button class="all" type="button" data-wday="0" aria-pressed="true">Tutti i giorni (abbonamenti)</button>${DAYS.map((d) => `<button type="button" data-wday="${d.n}" aria-pressed="false"><span>${d.short}</span><b>${d.num}</b></button>`).join('')}</div>
-      <label class="btn">Scegli screenshot o PDF<input type="file" accept="image/*,application/pdf" hidden id="w-file"></label></article>
+      <label class="btn">Scegli screenshot o PDF<input type="file" accept="image/*,application/pdf" hidden id="w-file"></label>
+      <p class="small" id="w-status">Con un PDF l’app ritaglia da sola il codice e lo mostra grande, con i dati sotto. Serve internet solo la prima volta.</p></article>
     <p class="small">I file restano salvati solo su questo telefono, non vengono caricati online. Tocca un QR per ingrandirlo. Se cancelli i dati di Safari vanno aggiunti di nuovo.</p></div>`;
 }
 async function hydrateWallet() {
   const box = document.getElementById('wallet-list'); if (!box) return;
   const items = await walletAll();
-  const card = (it) => {
-    const url = URL.createObjectURL(it.blob);
-    return `<article class="qr" style="margin-bottom:10px"><div class="row" style="width:100%"><h3>${esc(it.label)}</h3><span class="meta">${esc(dayTag(it.day))}</span></div>` +
-      (isPdf(it) ? `<a class="btn" href="${url}" target="_blank" rel="noopener">Apri il PDF</a>` : `<img src="${url}" alt="${esc(it.label)}" data-zoom="${esc(it.label)}">`) +
-      `<div class="acts"><button class="lnk" type="button" data-rename="${esc(it.key)}">Rinomina</button><button class="lnk" type="button" data-remove="${esc(it.key)}">Rimuovi</button></div></article>`;
+  const row = (it) => {
+    const thumb = isPdf(it) ? '<span class="thumb pdf">PDF</span>' : `<img class="thumb crisp" src="${URL.createObjectURL(it.blob)}" alt="">`;
+    return `<a class="linkcard light" href="#/biglietto/${encodeURIComponent(it.key)}" style="margin-bottom:8px">${thumb}<span><b>${esc(it.label)}</b><small>${esc(dayTag(it.day))}</small></span>${ICON.arrow}</a>`;
   };
   const pass = items.filter((x) => x.day === 0), other = items.filter((x) => x.day !== 0);
-  box.innerHTML = items.length ? (pass.length ? '<p class="sec">Abbonamenti mezzi</p>' + pass.map(card).join('') : '') + (other.length ? '<p class="sec">Altri biglietti</p>' + other.map(card).join('') : '')
+  box.innerHTML = items.length ? (pass.length ? '<p class="sec">Abbonamenti mezzi</p>' + pass.map(row).join('') : '') + (other.length ? '<p class="sec">Altri biglietti</p>' + other.map(row).join('') : '')
     : '<p class="note">Ancora niente qui. Aggiungi i QR dei mezzi, il musical, il Belvedere e le carte d’imbarco.</p>';
+}
+function viewTicket() {
+  return header('Portafoglio', 'Biglietto') + '<div class="content"><a class="ext" href="#/portafoglio">‹ Portafoglio</a><div id="ticket-box"><div class="small">Caricamento…</div></div></div>';
+}
+async function hydrateTicket(key) {
+  const box = document.getElementById('ticket-box'); if (!box) return;
+  const rec = await qrGet(key);
+  if (!rec || !rec.blob) { box.innerHTML = '<p class="note">Biglietto non trovato.</p>'; return; }
+  const it = { key, blob: rec.blob, label: rec.label || (key === 'qr1' ? 'Abbonamento 1' : key === 'qr2' ? 'Abbonamento 2' : 'Biglietto'), day: rec.day || 0 };
+  const h1 = document.querySelector('.h1'); if (h1) h1.textContent = it.label;
+  const url = URL.createObjectURL(rec.blob);
+  box.innerHTML = `<article class="qr"><span class="meta" style="align-self:flex-start">${esc(dayTag(it.day))}</span>` +
+    (isPdf(it) ? `<a class="btn" href="${url}" target="_blank" rel="noopener">Apri il PDF</a>` : `<img class="crisp" src="${url}" alt="${esc(it.label)}" data-zoom="${esc(it.label)}" data-crisp="1"><small class="small">Tocca il codice per ingrandirlo</small>`) + `</article>` +
+    (rec.info ? `<p class="sec">Dati del biglietto</p><img class="tinfo" src="${URL.createObjectURL(rec.info)}" alt="Dati del biglietto" data-zoom="${esc(it.label)}">` : '') +
+    `<div class="acts" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px"><button class="lnk" type="button" data-rename="${esc(key)}">Rinomina</button><button class="lnk" type="button" data-remove="${esc(key)}">Rimuovi</button>` +
+    (rec.pdf ? `<a class="lnk" href="${URL.createObjectURL(rec.pdf)}" target="_blank" rel="noopener">Apri il PDF originale</a>` : '') + `</div>`;
+}
+
+// --- Import da PDF: l'app ritaglia da sola il codice (QR, Aztec...) e la pagina del biglietto ---
+const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+function loadPdfJs() {
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  return new Promise((res, rej) => {
+    const sc = document.createElement('script'); sc.src = PDFJS + 'pdf.min.js';
+    sc.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; res(window.pdfjsLib); };
+    sc.onerror = () => rej(new Error('Serve internet per leggere i PDF la prima volta'));
+    document.head.appendChild(sc);
+  });
+}
+// il codice è il blocco scuro, denso e quasi quadrato della pagina
+function findCode(lum, W, H) {
+  const c = Math.max(6, Math.round(W / 200)), gw = Math.ceil(W / c), gh = Math.ceil(H / c);
+  const act = new Uint8Array(gw * gh);
+  for (let gy = 0; gy < gh; gy++) for (let gx = 0; gx < gw; gx++) {
+    let d = 0, n = 0;
+    for (let y = gy * c; y < Math.min(H, gy * c + c); y++) for (let x = gx * c; x < Math.min(W, gx * c + c); x++) { n++; if (lum[y * W + x] < 110) d++; }
+    if (d / n > 0.2) act[gy * gw + gx] = 1;
+  }
+  const seen = new Uint8Array(gw * gh); let best = null;
+  for (let i = 0; i < act.length; i++) {
+    if (!act[i] || seen[i]) continue;
+    const st = [i]; seen[i] = 1; let cnt = 0, x0 = gw, y0 = gh, x1 = 0, y1 = 0;
+    while (st.length) {
+      const k = st.pop(), x = k % gw, y = (k / gw) | 0; cnt++;
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= gw || ny >= gh) continue; const j = ny * gw + nx; if (act[j] && !seen[j]) { seen[j] = 1; st.push(j); } }
+    }
+    const bw = x1 - x0 + 1, bh = y1 - y0 + 1, fill = cnt / (bw * bh), ar = bw / bh;
+    if (bw >= 8 && bh >= 8 && fill > 0.6 && ar > 0.7 && ar < 1.43 && (!best || cnt > best.cnt)) best = { cnt, x0, y0, x1, y1 };
+  }
+  if (!best) return null;
+  let X0 = W, Y0 = H, X1 = 0, Y1 = 0;
+  const ax0 = Math.max(0, (best.x0 - 1) * c), ay0 = Math.max(0, (best.y0 - 1) * c), ax1 = Math.min(W, (best.x1 + 2) * c), ay1 = Math.min(H, (best.y1 + 2) * c);
+  for (let y = ay0; y < ay1; y++) for (let x = ax0; x < ax1; x++) if (lum[y * W + x] < 110) { if (x < X0) X0 = x; if (x > X1) X1 = x; if (y < Y0) Y0 = y; if (y > Y1) Y1 = y; }
+  return { x: X0, y: Y0, w: X1 - X0 + 1, h: Y1 - Y0 + 1 };
+}
+const cvBlob = (cv, type, q) => new Promise((r) => cv.toBlob(r, type, q));
+async function importPdf(file, name, day, say) {
+  say('Apro il PDF…');
+  const lib = await loadPdfJs();
+  const doc = await lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+  for (let i = 1; i <= doc.numPages; i++) {
+    say(`Leggo la pagina ${i} di ${doc.numPages}…`);
+    const pg = await doc.getPage(i), v0 = pg.getViewport({ scale: 1 }), vp = pg.getViewport({ scale: 2400 / v0.width });
+    const cv = document.createElement('canvas'); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+    const ctx = cv.getContext('2d', { willReadFrequently: true });
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+    await pg.render({ canvasContext: ctx, viewport: vp }).promise;
+    const W = cv.width, H = cv.height, px = ctx.getImageData(0, 0, W, H).data, lum = new Uint8ClampedArray(W * H);
+    for (let k = 0; k < W * H; k++) lum[k] = (px[4 * k] * 0.299 + px[4 * k + 1] * 0.587 + px[4 * k + 2] * 0.114) | 0;
+    // pagina ritagliata ai bordi del contenuto (i dati del biglietto)
+    let X0 = W, Y0 = H, X1 = 0, Y1 = 0;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (lum[y * W + x] < 240) { if (x < X0) X0 = x; if (x > X1) X1 = x; if (y < Y0) Y0 = y; if (y > Y1) Y1 = y; }
+    if (X1 <= X0 || Y1 <= Y0) continue;
+    const m = 16, iw = X1 - X0 + 1 + 2 * m, ih = Y1 - Y0 + 1 + 2 * m;
+    const ic = document.createElement('canvas'); ic.width = iw; ic.height = ih;
+    const ictx = ic.getContext('2d'); ictx.fillStyle = '#fff'; ictx.fillRect(0, 0, iw, ih); ictx.drawImage(cv, X0, Y0, iw - 2 * m, ih - 2 * m, m, m, iw - 2 * m, ih - 2 * m);
+    const infoBlob = await cvBlob(ic, 'image/jpeg', 0.92);
+    // codice: bianco e nero netti, su fondo bianco con margine
+    const code = findCode(lum, W, H); let qrBlob = null;
+    if (code) {
+      const qm = Math.round(code.w * 0.08), qw = code.w + 2 * qm, qh = code.h + 2 * qm;
+      const qc = document.createElement('canvas'); qc.width = qw; qc.height = qh;
+      const qctx = qc.getContext('2d'); const out = qctx.createImageData(qw, qh); out.data.fill(255);
+      for (let y = 0; y < code.h; y++) for (let x = 0; x < code.w; x++) { const v = lum[(code.y + y) * W + code.x + x] < 140 ? 0 : 255, t = 4 * ((y + qm) * qw + x + qm); out.data[t] = out.data[t + 1] = out.data[t + 2] = v; }
+      qctx.putImageData(out, 0, 0); qrBlob = await cvBlob(qc, 'image/png');
+    }
+    await qrSet('w-' + Date.now() + '-' + i, { blob: qrBlob || infoBlob, info: qrBlob ? infoBlob : null, pdf: file, label: doc.numPages > 1 ? `${name} ${i}` : name, day, created: Date.now() + i });
+  }
 }
 async function showPasses() {
   const items = (await walletAll()).filter((x) => x.day === 0);
@@ -517,9 +612,9 @@ async function hydrateDayWallet(n) {
       : `<button class="linkcard linkbtn" type="button" data-zoom="${esc(it.label)}" data-src="${url}">${inner}</button>`;
   }).join('<div style="height:8px"></div>');
 }
-function showZoom(src, name) {
+function showZoom(src, name, crisp) {
   const z = document.createElement('div'); z.className = 'zoom';
-  z.innerHTML = `<img src="${src}" alt="${esc(name)}"><p>${esc(name)}</p><small>Tocca per chiudere</small>`;
+  z.innerHTML = `<img${crisp ? ' class="crisp"' : ''} src="${src}" alt="${esc(name)}"><p>${esc(name)}</p><small>Tocca per chiudere</small>`;
   z.addEventListener('click', () => z.remove()); document.body.appendChild(z);
 }
 function showText(en, it) {
@@ -688,6 +783,7 @@ function route() {
   if (name === 'giorno') { html = viewDay(n); tab = 'giorno'; }
   else if (name === 'mangiare') { html = viewFood(n); tab = 'mangiare'; }
   else if (name === 'portafoglio') { html = viewWallet(); tab = 'portafoglio'; }
+  else if (name === 'biglietto') { html = viewTicket(); tab = 'portafoglio'; }
   else if (name === 'spese') { html = viewExpenses(); tab = 'info'; }
   else if (name === 'frasi') { html = viewPhrases(arg); tab = 'info'; }
   else if (name === 'itinerari') { html = viewRoutes(); tab = 'itinerari'; }
@@ -695,23 +791,24 @@ function route() {
   else { html = viewHome(); tab = 'home'; }
   document.body.style.background = tab === 'home' ? 'var(--navy)' : 'var(--cream)';
   view.innerHTML = html;
-  const fab = document.getElementById('fab'); if (fab) fab.hidden = tab === 'home' || tab === 'portafoglio';
-  if (tab === 'portafoglio') hydrateWallet();
+  const fab = document.getElementById('fab'); if (fab) fab.hidden = tab === 'home' || (tab === 'portafoglio' && name !== 'biglietto');
+  if (name === 'biglietto') hydrateTicket(decodeURIComponent(arg || ''));
+  else if (tab === 'portafoglio') hydrateWallet();
   if (tab === 'giorno') hydrateDayWallet(n);
   const items = [['home', '#/', 'Inizio', ICON.tabHome], ['giorno', `#/giorno/${n}`, 'Giorno', ICON.tabDay], ['mangiare', `#/mangiare/${n}`, 'Mangiare', ICON.tabFood], ['itinerari', '#/itinerari', 'Itinerari', ICON.tabRoute], ['portafoglio', '#/portafoglio', 'Portafoglio', ICON.tabQr], ['info', '#/info', 'Altro', ICON.tabInfo]];
   tabs.innerHTML = items.map(([id, href, label, ic]) => `<a href="${href}"${id === tab ? ' aria-current="page"' : ''}>${ic}${label}</a>`).join('');
 }
 document.addEventListener('click', async (e) => {
-  const z = e.target.closest('[data-zoom]'); if (z) { showZoom(z.dataset.src || z.src, z.dataset.zoom); return; }
+  const z = e.target.closest('[data-zoom]'); if (z) { showZoom(z.dataset.src || z.src, z.dataset.zoom, !!z.dataset.crisp); return; }
   if (e.target.closest('[data-passes]')) { showPasses(); return; }
   const wd = e.target.closest('[data-wday]');
   if (wd) { const box = document.getElementById('w-days'); box.dataset.val = wd.dataset.wday; box.querySelectorAll('[data-wday]').forEach((b) => b.setAttribute('aria-pressed', String(b === wd))); return; }
   const cv = e.target.closest('[data-convo]'); if (cv) { const [i, j] = cv.dataset.convo.split('-'); const x = CONVOS[i].lines[j]; showText(x[1], x[2]); return; }
   const ph = e.target.closest('[data-phrase]'); if (ph) { const [i, j] = ph.dataset.phrase.split('-'); const x = PHRASES[i].items[j]; showText(x[0], x[1]); return; }
   const rm = e.target.closest('[data-remove]');
-  if (rm) { if (confirm('Rimuovere questo file dal telefono?')) { await qrDel(rm.dataset.remove); hydrateWallet(); } return; }
+  if (rm) { if (confirm('Rimuovere questo file dal telefono?')) { await qrDel(rm.dataset.remove); location.hash = '#/portafoglio'; } return; }
   const rn = e.target.closest('[data-rename]');
-  if (rn) { const rec = await qrGet(rn.dataset.rename); const n = prompt('Nome', rec && rec.label); if (rec && n && n.trim()) { rec.label = n.trim(); await qrSet(rn.dataset.rename, rec); hydrateWallet(); } return; }
+  if (rn) { const rec = await qrGet(rn.dataset.rename); const n = prompt('Nome', rec && rec.label); if (rec && n && n.trim()) { rec.label = n.trim(); await qrSet(rn.dataset.rename, rec); route(); } return; }
   if (e.target.closest('[data-addexp]')) {
     const amt = Number(String(document.getElementById('e-amt').value).replace(',', '.'));
     if (!(amt > 0)) { document.getElementById('e-amt').focus(); return; }
@@ -725,9 +822,19 @@ document.addEventListener('click', async (e) => {
 document.addEventListener('change', async (e) => {
   const f = e.target;
   if (f.id === 'w-file' && f.files[0]) {
-    const file = f.files[0];
-    const name = document.getElementById('w-name').value.trim() || file.name.replace(/\.[^.]+$/, '') || 'Biglietto';
-    await qrSet('w-' + Date.now(), { blob: file, label: name, day: Number(document.getElementById('w-days').dataset.val) || 0, created: Date.now() });
+    const file = f.files[0], typed = document.getElementById('w-name').value.trim();
+    const day = Number(document.getElementById('w-days').dataset.val) || 0;
+    const pdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+    const say = (t) => { const st = document.getElementById('w-status'); if (st) st.textContent = t; };
+    if (pdf) {
+      try { await importPdf(file, typed || 'Biglietto', day, say); }
+      catch (err) {
+        alert('Non riesco a leggere il PDF (' + (err && err.message || 'errore') + '). Lo salvo così com’è.');
+        await qrSet('w-' + Date.now(), { blob: file, label: typed || 'Biglietto', day, created: Date.now() });
+      }
+    } else {
+      await qrSet('w-' + Date.now(), { blob: file, label: typed || file.name.replace(/\.[^.]+$/, '') || 'Biglietto', day, created: Date.now() });
+    }
     route(); return;
   }
   if (f.dataset.names != null) { const n = store.get('names', ['Persona 1', 'Persona 2']); n[Number(f.dataset.names)] = f.value.trim() || n[Number(f.dataset.names)]; store.set('names', n); route(); return; }
