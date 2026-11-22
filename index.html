@@ -622,12 +622,18 @@ async function hydrateDayWallet(n) {
   const box = document.querySelector('[data-daywallet]'); if (!box) return;
   const items = (await walletAll()).filter((it) => it.day === n || it.day === 0);
   if (!items.length) return;
-  box.innerHTML = `<p class="sec">Biglietti di oggi</p>` + items.map((it) => {
-    const url = URL.createObjectURL(it.blob);
-    const inner = `<span><b>${esc(it.label)}</b><small>${isPdf(it) ? 'Apri il PDF' : 'Tocca per ingrandire il QR'}</small></span>${ICON.ext}`;
-    return isPdf(it) ? `<a class="linkcard" href="${url}" target="_blank" rel="noopener">${inner}</a>`
-      : `<button class="linkcard linkbtn" type="button" data-zoom="${esc(it.label)}" data-src="${url}">${inner}</button>`;
-  }).join('<div style="height:8px"></div>');
+  box.innerHTML = `<button class="linkcard linkbtn" type="button" data-pick style="width:100%"><span><b>Mostra un biglietto</b><small>${items.length} disponibil${items.length === 1 ? 'e' : 'i'} · tocca per scegliere</small></span>${ICON.ext}</button>`;
+  box.querySelector('[data-pick]').onclick = () => {
+    const z = document.createElement('div'); z.className = 'zoom'; z.style.cssText = 'justify-content:flex-start;overflow:auto;cursor:default;align-items:stretch;padding-top:calc(16px + var(--safe-t))';
+    z.innerHTML = '<button class="btn" type="button" data-close style="align-self:flex-end">Chiudi</button><p>Scegli il biglietto</p>' +
+      items.map((it) => `<button class="linkcard linkbtn" type="button" data-open="${esc(it.key)}"><span><b>${esc(it.label)}</b><small>${it.day === 0 ? 'Abbonamento' : 'Biglietto'}</small></span>${ICON.ext}</button>`).join('');
+    z.addEventListener('click', (e) => {
+      const o = e.target.closest('[data-open]');
+      if (o) { z.remove(); location.hash = '#/biglietto/' + o.dataset.open; }
+      else if (e.target.closest('[data-close]') || e.target === z) z.remove();
+    });
+    document.body.appendChild(z);
+  };
 }
 function showZoom(src, name, crisp) {
   const z = document.createElement('div'); z.className = 'zoom';
