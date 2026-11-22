@@ -473,7 +473,7 @@ async function walletAll() {
   try {
     const rows = await idb('readonly', (st) => { const out = []; const r = st.openCursor(); r.onsuccess = () => { const c = r.result; if (c) { out.push({ key: c.key, ...c.value }); c.continue(); } }; return { get result() { return out; } }; });
     return (rows || []).filter((x) => x.blob).map((x) => ({ key: x.key, blob: x.blob, info: x.info || null, pdf: x.pdf || null, day: x.day || 0, created: x.created || 0,
-      label: x.label || (x.key === 'qr1' ? 'Abbonamento 1' : x.key === 'qr2' ? 'Abbonamento 2' : 'Biglietto') }))
+      label: store.get('labels', {})[x.key] || x.label || (x.key === 'qr1' ? 'Abbonamento 1' : x.key === 'qr2' ? 'Abbonamento 2' : 'Biglietto') }))
       .sort((p, q) => p.created - q.created);
   } catch (e) { return []; }
 }
@@ -508,7 +508,7 @@ async function hydrateTicket(key) {
   const box = document.getElementById('ticket-box'); if (!box) return;
   const rec = await qrGet(key);
   if (!rec || !rec.blob) { box.innerHTML = '<p class="note">Biglietto non trovato.</p>'; return; }
-  const it = { key, blob: rec.blob, label: rec.label || (key === 'qr1' ? 'Abbonamento 1' : key === 'qr2' ? 'Abbonamento 2' : 'Biglietto'), day: rec.day || 0 };
+  const it = { key, blob: rec.blob, label: store.get('labels', {})[key] || rec.label || (key === 'qr1' ? 'Abbonamento 1' : key === 'qr2' ? 'Abbonamento 2' : 'Biglietto'), day: rec.day || 0 };
   const h1 = document.querySelector('.h1'); if (h1) h1.textContent = it.label;
   const url = URL.createObjectURL(rec.blob);
   box.innerHTML = `<article class="qr"><span class="meta" style="align-self:flex-start">${esc(dayTag(it.day))}</span>` +
@@ -808,7 +808,7 @@ document.addEventListener('click', async (e) => {
   const rm = e.target.closest('[data-remove]');
   if (rm) { if (confirm('Rimuovere questo file dal telefono?')) { await qrDel(rm.dataset.remove); location.hash = '#/portafoglio'; } return; }
   const rn = e.target.closest('[data-rename]');
-  if (rn) { const rec = await qrGet(rn.dataset.rename); const n = prompt('Nome', rec && rec.label); if (rec && n && n.trim()) { rec.label = n.trim(); await qrSet(rn.dataset.rename, rec); route(); } return; }
+  if (rn) { const h1 = document.querySelector('.h1'); const n = prompt('Nome', h1 ? h1.textContent : ''); if (n && n.trim()) { const L = store.get('labels', {}); L[rn.dataset.rename] = n.trim(); store.set('labels', L); route(); } return; }
   if (e.target.closest('[data-addexp]')) {
     const amt = Number(String(document.getElementById('e-amt').value).replace(',', '.'));
     if (!(amt > 0)) { document.getElementById('e-amt').focus(); return; }
