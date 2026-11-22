@@ -111,6 +111,17 @@ main:has(.home){background:var(--navy)}
 .zoom img{width:100%;max-width:min(92vw,80vh);aspect-ratio:1/1;object-fit:contain}
 .zoom p{margin:0;font-size:16px;font-weight:700;color:var(--ink)}
 .zoom small{color:var(--muted)}
+/* portafoglio, spese, frasi */
+.field{width:100%;min-height:44px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font:inherit;font-size:16px;background:#fff;color:var(--ink)}
+.lbl{font-size:13px;font-weight:700;color:var(--muted)}
+.linkbtn{width:100%;border:none;cursor:pointer;font:inherit;text-align:left}
+.zoom .big{font-family:var(--serif);font-size:30px;line-height:1.25;text-align:center}
+.phr{width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:12px 14px;font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:2px;min-height:52px}
+.phr b{font-size:16px;line-height:1.3}
+.phr span{font-size:13px;color:var(--muted)}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sum div{background:var(--navy2);border-radius:12px;padding:8px 10px;color:var(--cream);font-size:12px}
+.sum b{display:block;font-size:17px;color:var(--gold)}
 /* nav */
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--card);border-top:1px solid var(--line);padding:6px 6px calc(10px + var(--safe-b))}
 /* Se iOS solleva la barra fissa, copre lo spazio rimasto sotto. */
@@ -378,7 +389,7 @@ function viewHome() {
       <div class="quick">
         <a href="${maps(HOTEL, 'transit')}" target="_blank" rel="noopener">${ICON.house}Torna in hotel</a>
         <a href="#/mangiare/${d.n}">${ICON.tabFood}Mangiare</a>
-        <a href="#/itinerari">${ICON.tabRoute}Itinerari</a>
+        <a href="#/portafoglio">${ICON.tabQr}Portafoglio</a>
       </div>
     </div></section>`;
 }
@@ -393,7 +404,7 @@ function viewDay(n) {
       <button type="button" data-planb="0" aria-pressed="${!planB}">Bratislava</button>
       <button type="button" data-planb="1" aria-pressed="${!!planB}">Piano B a Vienna</button></div>` : '';
   return header(d.label, title, chips('giorno', d.n)) +
-    `<div class="content">${toggle}${[].concat(alert || []).map((a) => `<div class="alert">${esc(a)}</div>`).join('')}${steps.map(stepHtml).join('')}</div>`;
+    `<div class="content">${toggle}${[].concat(alert || []).map((a) => `<div class="alert">${esc(a)}</div>`).join('')}<div data-daywallet="${d.n}"></div>${steps.map(stepHtml).join('')}</div>`;
 }
 
 function viewFood(n) {
@@ -423,8 +434,7 @@ function viewRoutes() {
   }).join('')}</div>`;
 }
 
-// ---------- Abbonamenti (QR salvati solo su questo telefono, in IndexedDB) ----------
-const QR_SLOTS = ['qr1', 'qr2'];
+// ---------- Portafoglio (file salvati solo su questo telefono, in IndexedDB) ----------
 const idb = (mode, fn) => new Promise((res, rej) => {
   const o = indexedDB.open('vienna-qr', 1);
   o.onupgradeneeded = () => o.result.createObjectStore('qr');
@@ -434,31 +444,125 @@ const idb = (mode, fn) => new Promise((res, rej) => {
 const qrGet = (k) => idb('readonly', (st) => st.get(k)).catch(() => null);
 const qrSet = (k, v) => idb('readwrite', (st) => st.put(v, k));
 const qrDel = (k) => idb('readwrite', (st) => st.delete(k));
-function viewPasses() {
-  return header('Abbonamenti', 'QR dei mezzi') + `<div class="content">
-    ${QR_SLOTS.map((k, i) => `<article class="qr" data-slot="${k}"><h3>Abbonamento ${i + 1}</h3><div class="empty">Caricamento…</div></article>`).join('')}
-    <p class="small">I QR restano salvati solo su questo telefono, non vengono caricati online. Tocca un QR per ingrandirlo. Se cancelli i dati di Safari vanno aggiunti di nuovo.</p></div>`;
+async function walletAll() {
+  try {
+    const rows = await idb('readonly', (st) => { const out = []; const r = st.openCursor(); r.onsuccess = () => { const c = r.result; if (c) { out.push({ key: c.key, ...c.value }); c.continue(); } }; return { get result() { return out; } }; });
+    return (rows || []).filter((x) => x.blob).map((x) => ({ key: x.key, blob: x.blob, day: x.day || 0, created: x.created || 0,
+      label: x.label || (x.key === 'qr1' ? 'Abbonamento 1' : x.key === 'qr2' ? 'Abbonamento 2' : 'Biglietto') }))
+      .sort((p, q) => p.created - q.created);
+  } catch (e) { return []; }
 }
-async function hydratePasses() {
-  for (const k of QR_SLOTS) {
-    const box = document.querySelector(`[data-slot="${k}"]`); if (!box) continue;
-    const rec = await qrGet(k); const i = QR_SLOTS.indexOf(k) + 1;
-    const name = (rec && rec.label) || `Abbonamento ${i}`;
-    const url = rec ? URL.createObjectURL(rec.blob) : null;
-    box.innerHTML = `<h3>${esc(name)}</h3>` +
-      (url ? `<img src="${url}" alt="QR ${esc(name)}" data-zoom="${esc(name)}">` : `<div class="empty">Nessun QR. Aggiungi lo screenshot dalla galleria.</div>`) +
-      `<div class="acts"><label class="btn">${url ? 'Sostituisci' : 'Aggiungi QR'}<input type="file" accept="image/*" hidden data-file="${k}"></label>` +
-      (url ? `<button class="lnk" type="button" data-rename="${k}">Rinomina</button><button class="lnk" type="button" data-remove="${k}">Rimuovi</button>` : '') + `</div>`;
-  }
+const isPdf = (it) => it.blob.type === 'application/pdf';
+const dayTag = (d) => d ? `${DAYS[d - 1].short} ${DAYS[d - 1].num}` : 'SEMPRE';
+function viewWallet() {
+  return header('Portafoglio', 'Biglietti e QR') + `<div class="content">
+    <div id="wallet-list"><div class="small">Caricamento…</div></div>
+    <article class="card"><h3>Aggiungi un biglietto</h3>
+      <label class="lbl" for="w-name">Nome</label><input class="field" id="w-name" placeholder="Es. Musical, Belvedere, abbonamento di Anna">
+      <label class="lbl" for="w-day">Quando si usa</label>
+      <select class="field" id="w-day"><option value="0">Tutti i giorni (abbonamenti)</option>${DAYS.map((d) => `<option value="${d.n}">${esc(d.label)}</option>`).join('')}</select>
+      <label class="btn">Scegli screenshot o PDF<input type="file" accept="image/*,application/pdf" hidden id="w-file"></label></article>
+    <p class="small">I file restano salvati solo su questo telefono, non vengono caricati online. Tocca un QR per ingrandirlo. Se cancelli i dati di Safari vanno aggiunti di nuovo.</p></div>`;
+}
+async function hydrateWallet() {
+  const box = document.getElementById('wallet-list'); if (!box) return;
+  const items = await walletAll();
+  box.innerHTML = items.length ? items.map((it) => {
+    const url = URL.createObjectURL(it.blob);
+    return `<article class="qr" style="margin-bottom:10px"><div class="row" style="width:100%"><h3>${esc(it.label)}</h3><span class="meta">${esc(dayTag(it.day))}</span></div>` +
+      (isPdf(it) ? `<a class="btn" href="${url}" target="_blank" rel="noopener">Apri il PDF</a>` : `<img src="${url}" alt="${esc(it.label)}" data-zoom="${esc(it.label)}">`) +
+      `<div class="acts"><button class="lnk" type="button" data-rename="${esc(it.key)}">Rinomina</button><button class="lnk" type="button" data-remove="${esc(it.key)}">Rimuovi</button></div></article>`;
+  }).join('') : '<p class="note">Ancora niente qui. Aggiungi i QR dei mezzi, il musical, il Belvedere e le carte d’imbarco.</p>';
+}
+async function hydrateDayWallet(n) {
+  const box = document.querySelector('[data-daywallet]'); if (!box) return;
+  const items = (await walletAll()).filter((it) => it.day === n || it.day === 0);
+  if (!items.length) return;
+  box.innerHTML = `<p class="sec">Biglietti di oggi</p>` + items.map((it) => {
+    const url = URL.createObjectURL(it.blob);
+    const inner = `<span><b>${esc(it.label)}</b><small>${isPdf(it) ? 'Apri il PDF' : 'Tocca per ingrandire il QR'}</small></span>${ICON.ext}`;
+    return isPdf(it) ? `<a class="linkcard" href="${url}" target="_blank" rel="noopener">${inner}</a>`
+      : `<button class="linkcard linkbtn" type="button" data-zoom="${esc(it.label)}" data-src="${url}">${inner}</button>`;
+  }).join('<div style="height:8px"></div>');
 }
 function showZoom(src, name) {
   const z = document.createElement('div'); z.className = 'zoom';
-  z.innerHTML = `<img src="${src}" alt="QR ${esc(name)}"><p>${esc(name)}</p><small>Tocca per chiudere</small>`;
+  z.innerHTML = `<img src="${src}" alt="${esc(name)}"><p>${esc(name)}</p><small>Tocca per chiudere</small>`;
   z.addEventListener('click', () => z.remove()); document.body.appendChild(z);
+}
+function showText(en, it) {
+  const z = document.createElement('div'); z.className = 'zoom';
+  z.innerHTML = `<p class="big">${esc(en)}</p><p style="font-weight:400;color:var(--muted)">${esc(it)}</p><small>Tocca per chiudere</small>`;
+  z.addEventListener('click', () => z.remove()); document.body.appendChild(z);
+}
+
+// ---------- Spese in due ----------
+const money = (n) => n.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+function viewExpenses() {
+  const names = store.get('names', ['Persona 1', 'Persona 2']);
+  const list = store.get('exp', []);
+  const budget = Number(store.get('budget', 0)) || 0;
+  const total = list.reduce((t, x) => t + x.amt, 0);
+  const sh = [0, 1].map((w) => list.filter((x) => x.who === w && x.shared).reduce((t, x) => t + x.amt, 0));
+  const net = sh[0] / 2 - sh[1] / 2;
+  const settle = Math.abs(net) < 0.005 ? 'Siete pari, nessun conto da fare.' : net > 0 ? `${names[1]} deve ${money(net)} a ${names[0]}.` : `${names[0]} deve ${money(-net)} a ${names[1]}.`;
+  const rows = list.slice().reverse().map((x) => `<article class="card" style="flex-direction:row;align-items:center;gap:10px">
+      <div style="flex:1;min-width:0"><h3>${esc(x.desc)}</h3><p class="note">${esc(names[x.who])} · ${x.shared ? 'a metà' : 'solo suo'} · ${esc(new Date(x.at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' }))}</p></div>
+      <span class="price">${money(x.amt)}</span><button class="lnk" type="button" data-delexp="${x.id}" aria-label="Elimina ${esc(x.desc)}" style="background:none;border:none;font-size:22px;min-width:44px;min-height:44px;cursor:pointer;color:var(--muted)">×</button></article>`).join('');
+  return header('Spese in due', `${money(total)} spesi`) + `<div class="content">
+    <article class="card"><div class="sum"><div>Ha pagato ${esc(names[0])}<b>${money(list.filter((x) => x.who === 0).reduce((t, x) => t + x.amt, 0))}</b></div><div>Ha pagato ${esc(names[1])}<b>${money(list.filter((x) => x.who === 1).reduce((t, x) => t + x.amt, 0))}</b></div></div>
+      <p class="note"><b>${esc(settle)}</b></p>
+      ${budget ? `<p class="note">Budget ${money(budget)}: ${total <= budget ? 'restano ' + money(budget - total) : 'sforato di ' + money(total - budget)}.</p>` : ''}</article>
+    <article class="card"><h3>Nuova spesa</h3>
+      <input class="field" id="e-desc" placeholder="Cosa (es. cena, metro)" aria-label="Descrizione">
+      <input class="field" id="e-amt" inputmode="decimal" placeholder="Importo in €" aria-label="Importo">
+      <select class="field" id="e-who" aria-label="Chi ha pagato"><option value="0">Ha pagato ${esc(names[0])}</option><option value="1">Ha pagato ${esc(names[1])}</option></select>
+      <label class="note" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="e-shared" checked style="width:22px;height:22px"> Dividi a metà</label>
+      <button class="btn" type="button" data-addexp="1">Aggiungi</button></article>
+    ${rows || '<p class="note">Nessuna spesa ancora.</p>'}
+    <p class="sec">Impostazioni</p>
+    <article class="card"><label class="lbl" for="n0">Primo nome</label><input class="field" id="n0" data-names="0" value="${esc(names[0])}">
+      <label class="lbl" for="n1">Secondo nome</label><input class="field" id="n1" data-names="1" value="${esc(names[1])}">
+      <label class="lbl" for="bud">Budget totale in € (facoltativo)</label><input class="field" id="bud" data-budget="1" inputmode="decimal" value="${budget || ''}"></article>
+    <p class="small">Le spese restano salvate solo su questo telefono.</p></div>`;
+}
+
+// ---------- Frasi utili (in inglese) ----------
+const PHRASES = [
+  { title: 'Basics', items: [
+    ['Hello, good morning.', 'Buongiorno.'], ['Thank you very much.', 'Grazie mille.'], ['Excuse me, do you speak English?', 'Scusi, parla inglese?'],
+    ['Sorry, I don’t understand.', 'Mi dispiace, non capisco.'], ['Could you speak more slowly, please?', 'Può parlare più lentamente, per favore?'], ['Could you write it down for me?', 'Può scrivermelo?'] ] },
+  { title: 'Restaurant', items: [
+    ['A table for two, please.', 'Un tavolo per due, per favore.'], ['Do you have a table for two without a reservation?', 'Avete un tavolo per due senza prenotazione?'],
+    ['I have a reservation for two.', 'Ho una prenotazione per due.'], ['Could we see the menu, please?', 'Possiamo vedere il menu?'], ['What do you recommend?', 'Cosa consiglia?'],
+    ['I’d like the schnitzel, please.', 'Vorrei la cotoletta, per favore.'], ['I have a food allergy. Does this contain nuts?', 'Ho un’allergia. Ci sono noci o frutta secca?'],
+    ['Is this vegetarian?', 'È vegetariano?'], ['Tap water, please.', 'Acqua del rubinetto, per favore.'], ['Could we have the bill, please?', 'Possiamo avere il conto?'],
+    ['Can I pay by card?', 'Posso pagare con la carta?'], ['Keep the change.', 'Tenga il resto.'], ['Everything was delicious, thank you.', 'Era tutto squisito, grazie.'] ] },
+  { title: 'Getting around', items: [
+    ['Where is the nearest metro station?', 'Dov’è la fermata della metro più vicina?'], ['Does this tram go to the city centre?', 'Questo tram va in centro?'],
+    ['Which platform is the train to Bratislava?', 'Da che binario parte il treno per Bratislava?'], ['Could you tell me when we arrive at this stop?', 'Può dirmi quando arriviamo a questa fermata?'],
+    ['Is this seat taken?', 'Questo posto è libero?'], ['Could you call a taxi for us, please?', 'Può chiamarci un taxi?'] ] },
+  { title: 'Hotel', items: [
+    ['We have a reservation for four nights.', 'Abbiamo una prenotazione per quattro notti.'], ['Could we leave our luggage until check-in?', 'Possiamo lasciare i bagagli fino al check-in?'],
+    ['What time is breakfast?', 'A che ora è la colazione?'], ['The heating in our room isn’t working.', 'Il riscaldamento in camera non funziona.'], ['Could we have the Wi-Fi password, please?', 'Può darci la password del Wi-Fi?'] ] },
+  { title: 'Markets and shopping', items: [
+    ['How much is this?', 'Quanto costa?'], ['Two punches, please.', 'Due punch, per favore.'], ['Is there a deposit on the mug?', 'C’è una cauzione sulla tazza?'],
+    ['Do you accept cards?', 'Accettate carte?'], ['Could you take a photo of us, please?', 'Può farci una foto, per favore?'] ] },
+  { title: 'Help', items: [
+    ['I need help, please.', 'Ho bisogno di aiuto.'], ['Please call an ambulance. The number is 112.', 'Chiami un’ambulanza. Il numero è 112.'], ['I need a doctor.', 'Ho bisogno di un medico.'],
+    ['Where is the nearest pharmacy?', 'Dov’è la farmacia più vicina?'], ['I’ve lost my phone / wallet.', 'Ho perso il telefono / il portafoglio.'], ['Where is the nearest police station?', 'Dov’è la stazione di polizia più vicina?'] ] }
+];
+function viewPhrases() {
+  return header('Frasi utili', 'Da mostrare in inglese') + `<div class="content">
+    <p class="small">Tocca una frase: si apre a schermo intero, da mostrare o leggere. Sotto c’è il significato in italiano.</p>
+    ${PHRASES.map((g, i) => `<p class="sec">${esc(g.title)}</p>` + g.items.map(([en, it], j) => `<button class="phr" type="button" data-phrase="${i}-${j}"><b>${esc(en)}</b><span>${esc(it)}</span></button>`).join('')).join('')}</div>`;
 }
 
 function viewInfo() {
   return header('Info utili', 'Da tenere a portata di mano') + `<div class="content info">
+    <p class="sec">Strumenti</p>
+    <a class="linkcard" href="#/spese"><span><b>Spese in due</b><small>Segna cosa spendete e chi deve cosa</small></span>${ICON.arrow}</a>
+    <a class="linkcard" href="#/frasi"><span><b>Frasi utili in inglese</b><small>Ristorante, mezzi, hotel, aiuto</small></span>${ICON.arrow}</a>
     <p class="sec">Hotel</p>
     <article class="card"><h3>Hotel Korotan</h3><p class="note">${esc(HOTEL)} · 8° distretto (Josefstadt). Fermate vicine: U6 Alser Straße (quella dei percorsi, ~6 min a piedi), tram 43 e bus 13A Skodagasse, tram 2 Albertgasse. In alternativa U6 Josefstädter Straße, a distanza simile.</p>
       <a class="btn" href="${maps(HOTEL, 'transit')}" target="_blank" rel="noopener">${ICON.pin}Portami in hotel</a></article>
@@ -489,28 +593,46 @@ function route() {
   let html, tab;
   if (name === 'giorno') { html = viewDay(n); tab = 'giorno'; }
   else if (name === 'mangiare') { html = viewFood(n); tab = 'mangiare'; }
-  else if (name === 'abbonamenti') { html = viewPasses(); tab = 'abbonamenti'; }
+  else if (name === 'portafoglio') { html = viewWallet(); tab = 'portafoglio'; }
+  else if (name === 'spese') { html = viewExpenses(); tab = 'info'; }
+  else if (name === 'frasi') { html = viewPhrases(); tab = 'info'; }
   else if (name === 'itinerari') { html = viewRoutes(); tab = 'itinerari'; }
   else if (name === 'info') { html = viewInfo(); tab = 'info'; }
   else { html = viewHome(); tab = 'home'; }
   document.body.style.background = tab === 'home' ? 'var(--navy)' : 'var(--cream)';
   view.innerHTML = html;
-  if (tab === 'abbonamenti') hydratePasses();
-  const items = [['home', '#/', 'Inizio', ICON.tabHome], ['giorno', `#/giorno/${n}`, 'Giorno', ICON.tabDay], ['mangiare', `#/mangiare/${n}`, 'Mangiare', ICON.tabFood], ['abbonamenti', '#/abbonamenti', 'Abbonamenti', ICON.tabQr], ['itinerari', '#/itinerari', 'Itinerari', ICON.tabRoute], ['info', '#/info', 'Info', ICON.tabInfo]];
+  if (tab === 'portafoglio') hydrateWallet();
+  if (tab === 'giorno') hydrateDayWallet(n);
+  const items = [['home', '#/', 'Inizio', ICON.tabHome], ['giorno', `#/giorno/${n}`, 'Giorno', ICON.tabDay], ['mangiare', `#/mangiare/${n}`, 'Mangiare', ICON.tabFood], ['itinerari', '#/itinerari', 'Itinerari', ICON.tabRoute], ['portafoglio', '#/portafoglio', 'Portafoglio', ICON.tabQr], ['info', '#/info', 'Altro', ICON.tabInfo]];
   tabs.innerHTML = items.map(([id, href, label, ic]) => `<a href="${href}"${id === tab ? ' aria-current="page"' : ''}>${ic}${label}</a>`).join('');
 }
 document.addEventListener('click', async (e) => {
-  const z = e.target.closest('[data-zoom]'); if (z) { showZoom(z.src, z.dataset.zoom); return; }
+  const z = e.target.closest('[data-zoom]'); if (z) { showZoom(z.dataset.src || z.src, z.dataset.zoom); return; }
+  const ph = e.target.closest('[data-phrase]'); if (ph) { const [i, j] = ph.dataset.phrase.split('-'); const x = PHRASES[i].items[j]; showText(x[0], x[1]); return; }
   const rm = e.target.closest('[data-remove]');
-  if (rm) { if (confirm('Rimuovere questo QR dal telefono?')) { await qrDel(rm.dataset.remove); hydratePasses(); } return; }
+  if (rm) { if (confirm('Rimuovere questo file dal telefono?')) { await qrDel(rm.dataset.remove); hydrateWallet(); } return; }
   const rn = e.target.closest('[data-rename]');
-  if (rn) { const rec = await qrGet(rn.dataset.rename); const n = prompt('Nome', rec && rec.label); if (rec && n && n.trim()) { rec.label = n.trim(); await qrSet(rn.dataset.rename, rec); hydratePasses(); } }
+  if (rn) { const rec = await qrGet(rn.dataset.rename); const n = prompt('Nome', rec && rec.label); if (rec && n && n.trim()) { rec.label = n.trim(); await qrSet(rn.dataset.rename, rec); hydrateWallet(); } return; }
+  if (e.target.closest('[data-addexp]')) {
+    const amt = Number(String(document.getElementById('e-amt').value).replace(',', '.'));
+    if (!(amt > 0)) { document.getElementById('e-amt').focus(); return; }
+    const list = store.get('exp', []);
+    list.push({ id: Date.now(), desc: document.getElementById('e-desc').value.trim() || 'Spesa', amt, who: Number(document.getElementById('e-who').value), shared: document.getElementById('e-shared').checked, at: new Date().toISOString() });
+    store.set('exp', list); route(); return;
+  }
+  const de = e.target.closest('[data-delexp]');
+  if (de && confirm('Eliminare questa spesa?')) { store.set('exp', store.get('exp', []).filter((x) => x.id !== Number(de.dataset.delexp))); route(); }
 });
 document.addEventListener('change', async (e) => {
-  const f = e.target.closest('[data-file]'); if (!f || !f.files[0]) return;
-  const old = await qrGet(f.dataset.file);
-  await qrSet(f.dataset.file, { blob: f.files[0], label: old && old.label });
-  hydratePasses();
+  const f = e.target;
+  if (f.id === 'w-file' && f.files[0]) {
+    const file = f.files[0];
+    const name = document.getElementById('w-name').value.trim() || file.name.replace(/\.[^.]+$/, '') || 'Biglietto';
+    await qrSet('w-' + Date.now(), { blob: file, label: name, day: Number(document.getElementById('w-day').value) || 0, created: Date.now() });
+    route(); return;
+  }
+  if (f.dataset.names != null) { const n = store.get('names', ['Persona 1', 'Persona 2']); n[Number(f.dataset.names)] = f.value.trim() || n[Number(f.dataset.names)]; store.set('names', n); route(); return; }
+  if (f.dataset.budget != null) { store.set('budget', Number(String(f.value).replace(',', '.')) || 0); route(); }
 });
 document.addEventListener('click', (e) => {
   const go = e.target.closest('[data-go]');
