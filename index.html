@@ -122,6 +122,21 @@ main:has(.home){background:var(--navy)}
 .sum{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .sum div{background:var(--navy2);border-radius:12px;padding:8px 10px;color:var(--cream);font-size:12px}
 .sum b{display:block;font-size:17px;color:var(--gold)}
+/* conversazioni e scelta giorno */
+.dlg{display:flex;flex-direction:column;gap:8px;padding:0 12px 12px}
+.dlg .who{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);margin:2px 0 -4px}
+.say{max-width:90%;border-radius:14px;padding:9px 12px;font:inherit;text-align:left;display:flex;flex-direction:column;gap:2px}
+.say b{font-size:15px;line-height:1.35}
+.say span{font-size:13px;opacity:.8}
+.say.me{align-self:flex-end;background:var(--navy);color:var(--cream);border:none;cursor:pointer}
+.say.them{align-self:flex-start;background:#fff;border:1px solid var(--line);color:var(--ink)}
+.pick{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.pick button{min-height:52px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 0}
+.pick button span{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted)}
+.pick button b{font-size:17px}
+.pick button.all{grid-column:1/-1;min-height:44px;flex-direction:row;font-weight:700;font-size:14px}
+.pick button[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:var(--cream)}
+.pick button[aria-pressed="true"] span{color:var(--gold)}
 /* nav */
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--card);border-top:1px solid var(--line);padding:6px 6px calc(10px + var(--safe-b))}
 /* Se iOS solleva la barra fissa, copre lo spazio rimasto sotto. */
@@ -459,8 +474,8 @@ function viewWallet() {
     <div id="wallet-list"><div class="small">Caricamento…</div></div>
     <article class="card"><h3>Aggiungi un biglietto</h3>
       <label class="lbl" for="w-name">Nome</label><input class="field" id="w-name" placeholder="Es. Musical, Belvedere, abbonamento di Anna">
-      <label class="lbl" for="w-day">Quando si usa</label>
-      <select class="field" id="w-day"><option value="0">Tutti i giorni (abbonamenti)</option>${DAYS.map((d) => `<option value="${d.n}">${esc(d.label)}</option>`).join('')}</select>
+      <span class="lbl" id="w-lbl">Quando si usa</span>
+      <div class="pick" id="w-days" data-val="0" role="group" aria-labelledby="w-lbl"><button class="all" type="button" data-wday="0" aria-pressed="true">Tutti i giorni (abbonamenti)</button>${DAYS.map((d) => `<button type="button" data-wday="${d.n}" aria-pressed="false"><span>${d.short}</span><b>${d.num}</b></button>`).join('')}</div>
       <label class="btn">Scegli screenshot o PDF<input type="file" accept="image/*,application/pdf" hidden id="w-file"></label></article>
     <p class="small">I file restano salvati solo su questo telefono, non vengono caricati online. Tocca un QR per ingrandirlo. Se cancelli i dati di Safari vanno aggiunti di nuovo.</p></div>`;
 }
@@ -552,10 +567,72 @@ const PHRASES = [
     ['I need help, please.', 'Ho bisogno di aiuto.'], ['Please call an ambulance. The number is 112.', 'Chiami un’ambulanza. Il numero è 112.'], ['I need a doctor.', 'Ho bisogno di un medico.'],
     ['Where is the nearest pharmacy?', 'Dov’è la farmacia più vicina?'], ['I’ve lost my phone / wallet.', 'Ho perso il telefono / il portafoglio.'], ['Where is the nearest police station?', 'Dov’è la stazione di polizia più vicina?'] ] }
 ];
-function viewPhrases() {
-  return header('Frasi utili', 'Da mostrare in inglese') + `<div class="content">
-    <p class="small">Tocca una frase: si apre a schermo intero, da mostrare o leggere. Sotto c’è il significato in italiano.</p>
-    ${PHRASES.map((g, i) => `<p class="sec">${esc(g.title)}</p>` + g.items.map(([en, it], j) => `<button class="phr" type="button" data-phrase="${i}-${j}"><b>${esc(en)}</b><span>${esc(it)}</span></button>`).join('')).join('')}</div>`;
+const CONVOS = [
+  { title: 'At the restaurant, no reservation', role: 'Cameriere', lines: [
+    ['me', 'A table for two, please.', 'Un tavolo per due, per favore.'], ['them', 'Do you have a reservation?', 'Avete prenotato?'],
+    ['me', 'No, we don’t. Do you have a table for two without a reservation?', 'No. Avete un tavolo per due senza prenotazione?'], ['them', 'Yes, of course. Please follow me.', 'Sì, certo. Mi seguite, prego.'],
+    ['them', 'Here is the menu. Would you like something to drink?', 'Ecco il menu. Volete qualcosa da bere?'], ['me', 'Tap water, please.', 'Acqua del rubinetto, per favore.'],
+    ['them', 'Are you ready to order?', 'Siete pronti a ordinare?'], ['me', 'What do you recommend?', 'Cosa consiglia?'],
+    ['them', 'The schnitzel is our speciality.', 'La cotoletta è la nostra specialità.'], ['me', 'I’d like the schnitzel, please.', 'Vorrei la cotoletta, per favore.'] ] },
+  { title: 'Arriving with a reservation', role: 'Host', lines: [
+    ['me', 'Hello, good morning. I have a reservation for two.', 'Buongiorno. Ho una prenotazione per due.'], ['them', 'Of course. What name is it under?', 'Certo. A che nome?'],
+    ['me', 'It’s under the name… (say your name).', 'È a nome… (di’ il tuo nome).'], ['them', 'Yes, I can see it. Your table is ready.', 'Sì, la vedo. Il vostro tavolo è pronto.'],
+    ['me', 'Could we see the menu, please?', 'Possiamo vedere il menu?'], ['them', 'Certainly. I’ll bring it right away.', 'Certo, lo porto subito.'] ] },
+  { title: 'Allergies and vegetarian food', role: 'Cameriere', lines: [
+    ['me', 'I have a food allergy. Does this contain nuts?', 'Ho un’allergia. Ci sono noci o frutta secca?'], ['them', 'Let me check with the kitchen.', 'Controllo con la cucina.'],
+    ['them', 'No, there are no nuts in this dish.', 'No, in questo piatto non ci sono noci.'], ['me', 'Is this vegetarian?', 'È vegetariano?'],
+    ['them', 'This one has meat, but the cheese dumplings are vegetarian.', 'Questo ha la carne, ma gli gnocchi al formaggio sono vegetariani.'], ['me', 'Then I’ll have the dumplings. Thank you.', 'Allora prendo gli gnocchi. Grazie.'] ] },
+  { title: 'Paying the bill', role: 'Cameriere', lines: [
+    ['me', 'Could we have the bill, please?', 'Possiamo avere il conto?'], ['them', 'Together or separately?', 'Insieme o separati?'],
+    ['me', 'Together, please. Can I pay by card?', 'Insieme, grazie. Posso pagare con la carta?'], ['them', 'Yes, of course. Here you are.', 'Sì, certo. Ecco a lei.'],
+    ['me', 'Keep the change.', 'Tenga il resto.'], ['them', 'Thank you very much. Enjoy your evening!', 'Grazie mille. Buona serata!'],
+    ['me', 'Everything was delicious, thank you.', 'Era tutto squisito, grazie.'] ] },
+  { title: 'Asking the way to the metro', role: 'Passante', lines: [
+    ['me', 'Excuse me, do you speak English?', 'Scusi, parla inglese?'], ['them', 'Yes, a little. How can I help?', 'Sì, un po’. Come posso aiutarla?'],
+    ['me', 'Where is the nearest metro station?', 'Dov’è la fermata della metro più vicina?'], ['them', 'Go straight, then turn left. It’s about five minutes on foot.', 'Sempre dritto, poi a sinistra. Sono circa cinque minuti a piedi.'],
+    ['me', 'Sorry, could you speak more slowly, please?', 'Scusi, può parlare più lentamente?'], ['them', 'Of course. Straight on, then left.', 'Certo. Dritto, poi a sinistra.'],
+    ['me', 'Thank you very much.', 'Grazie mille.'] ] },
+  { title: 'On the tram', role: 'Passeggero', lines: [
+    ['me', 'Does this tram go to the city centre?', 'Questo tram va in centro?'], ['them', 'Yes, it does.', 'Sì, va in centro.'],
+    ['me', 'Could you tell me when we arrive at this stop?', 'Può dirmi quando arriviamo a questa fermata?'], ['them', 'Sure, I’ll let you know.', 'Certo, la avviso io.'],
+    ['me', 'Is this seat taken?', 'Questo posto è libero?'], ['them', 'No, please sit down.', 'No, si sieda pure.'] ] },
+  { title: 'Train to Bratislava', role: 'Personale della stazione', lines: [
+    ['me', 'Excuse me, which platform is the train to Bratislava?', 'Scusi, da che binario parte il treno per Bratislava?'], ['them', 'Platform six. It leaves in ten minutes.', 'Binario sei. Parte tra dieci minuti.'],
+    ['me', 'Could you write it down for me?', 'Può scrivermelo?'], ['them', 'Sure. Platform six.', 'Certo. Binario sei.'], ['me', 'Thank you very much.', 'Grazie mille.'] ] },
+  { title: 'Hotel check-in and luggage', role: 'Receptionist', lines: [
+    ['me', 'Hello. We have a reservation for four nights.', 'Salve. Abbiamo una prenotazione per quattro notti.'], ['them', 'Welcome! May I see your passports, please?', 'Benvenuti! Posso vedere i passaporti?'],
+    ['me', 'Could we leave our luggage until check-in?', 'Possiamo lasciare i bagagli fino al check-in?'], ['them', 'Of course. Your room will be ready this afternoon.', 'Certo. La camera sarà pronta nel pomeriggio.'],
+    ['me', 'What time is breakfast?', 'A che ora è la colazione?'], ['them', 'I’ll write the times down for you.', 'Le scrivo gli orari.'],
+    ['me', 'Could we have the Wi-Fi password, please?', 'Può darci la password del Wi-Fi?'], ['them', 'Certainly, here it is.', 'Certo, ecco.'] ] },
+  { title: 'A problem in the room, and a taxi', role: 'Receptionist', lines: [
+    ['me', 'The heating in our room isn’t working.', 'Il riscaldamento in camera non funziona.'], ['them', 'I’m very sorry. I’ll send someone right away.', 'Mi dispiace molto. Mando subito qualcuno.'],
+    ['me', 'Thank you. Could you call a taxi for us, please?', 'Grazie. Può chiamarci un taxi?'], ['them', 'Of course. Where would you like to go?', 'Certo. Dove volete andare?'],
+    ['me', 'To the airport, please.', 'All’aeroporto, per favore.'] ] },
+  { title: 'At the Christmas market', role: 'Venditore', lines: [
+    ['me', 'Two punches, please.', 'Due punch, per favore.'], ['them', 'Here you are.', 'Ecco a voi.'],
+    ['me', 'Is there a deposit on the mug?', 'C’è una cauzione sulla tazza?'], ['them', 'Yes. You get it back when you return the mug.', 'Sì. La riavete quando restituite la tazza.'],
+    ['me', 'Do you accept cards?', 'Accettate carte?'], ['them', 'Yes, cards are fine.', 'Sì, le carte vanno bene.'],
+    ['me', 'Could you take a photo of us, please?', 'Può farci una foto, per favore?'], ['them', 'Sure! Smile!', 'Certo! Sorridete!'] ] },
+  { title: 'Lost phone or wallet', role: 'Aiutante', lines: [
+    ['me', 'I need help, please.', 'Ho bisogno di aiuto.'], ['them', 'Of course. What happened?', 'Certo. Cosa è successo?'],
+    ['me', 'I’ve lost my phone / wallet.', 'Ho perso il telefono / il portafoglio.'], ['them', 'When did you last have it?', 'Quando l’avete avuto l’ultima volta?'],
+    ['me', 'Where is the nearest police station?', 'Dov’è la stazione di polizia più vicina?'], ['them', 'I can show you on the map.', 'Posso mostrarvela sulla mappa.'] ] },
+  { title: 'Feeling ill', role: 'Aiutante', lines: [
+    ['me', 'I need a doctor.', 'Ho bisogno di un medico.'], ['them', 'What is the problem?', 'Qual è il problema?'],
+    ['me', 'I don’t feel well. Please call an ambulance. The number is 112.', 'Non mi sento bene. Chiami un’ambulanza. Il numero è 112.'], ['them', 'Yes, I’m calling now. Please stay here.', 'Sì, chiamo subito. Resti qui.'],
+    ['me', 'Where is the nearest pharmacy?', 'Dov’è la farmacia più vicina?'], ['them', 'There is one at the end of this street.', 'Ce n’è una in fondo a questa strada.'] ] }
+];
+function viewPhrases(mode) {
+  const conv = mode === 'conv';
+  const toggle = `<div class="toggle" role="group" aria-label="Frasi o conversazioni">
+    <button type="button" data-go="#/frasi" aria-pressed="${!conv}">Frasi</button><button type="button" data-go="#/frasi/conv" aria-pressed="${conv}">Conversazioni</button></div>`;
+  const body = conv ? `<p class="small">Dialoghi di esempio che partono dalle frasi. Tocca una tua battuta (in blu) per mostrarla a schermo intero. Le risposte reali possono cambiare.</p>
+    ${CONVOS.map((c, i) => `<details class="how"><summary>${esc(c.title)}</summary><div class="dlg">${c.lines.map(([w, en, it], j) => w === 'me'
+      ? `<p class="who" style="align-self:flex-end">Tu</p><button class="say me" type="button" data-convo="${i}-${j}"><b>${esc(en)}</b><span>${esc(it)}</span></button>`
+      : `<p class="who">${esc(c.role)}</p><div class="say them"><b>${esc(en)}</b><span>${esc(it)}</span></div>`).join('')}</div></details>`).join('')}`
+    : `<p class="small">Tocca una frase: si apre a schermo intero, da mostrare o leggere. Sotto c’è il significato in italiano.</p>
+    ${PHRASES.map((g, i) => `<p class="sec">${esc(g.title)}</p>` + g.items.map(([en, it], j) => `<button class="phr" type="button" data-phrase="${i}-${j}"><b>${esc(en)}</b><span>${esc(it)}</span></button>`).join('')).join('')}`;
+  return header('Frasi utili', conv ? 'Conversazioni in inglese' : 'Da mostrare in inglese') + `<div class="content">${toggle}${body}</div>`;
 }
 
 function viewInfo() {
@@ -595,7 +672,7 @@ function route() {
   else if (name === 'mangiare') { html = viewFood(n); tab = 'mangiare'; }
   else if (name === 'portafoglio') { html = viewWallet(); tab = 'portafoglio'; }
   else if (name === 'spese') { html = viewExpenses(); tab = 'info'; }
-  else if (name === 'frasi') { html = viewPhrases(); tab = 'info'; }
+  else if (name === 'frasi') { html = viewPhrases(arg); tab = 'info'; }
   else if (name === 'itinerari') { html = viewRoutes(); tab = 'itinerari'; }
   else if (name === 'info') { html = viewInfo(); tab = 'info'; }
   else { html = viewHome(); tab = 'home'; }
@@ -608,6 +685,9 @@ function route() {
 }
 document.addEventListener('click', async (e) => {
   const z = e.target.closest('[data-zoom]'); if (z) { showZoom(z.dataset.src || z.src, z.dataset.zoom); return; }
+  const wd = e.target.closest('[data-wday]');
+  if (wd) { const box = document.getElementById('w-days'); box.dataset.val = wd.dataset.wday; box.querySelectorAll('[data-wday]').forEach((b) => b.setAttribute('aria-pressed', String(b === wd))); return; }
+  const cv = e.target.closest('[data-convo]'); if (cv) { const [i, j] = cv.dataset.convo.split('-'); const x = CONVOS[i].lines[j]; showText(x[1], x[2]); return; }
   const ph = e.target.closest('[data-phrase]'); if (ph) { const [i, j] = ph.dataset.phrase.split('-'); const x = PHRASES[i].items[j]; showText(x[0], x[1]); return; }
   const rm = e.target.closest('[data-remove]');
   if (rm) { if (confirm('Rimuovere questo file dal telefono?')) { await qrDel(rm.dataset.remove); hydrateWallet(); } return; }
@@ -628,7 +708,7 @@ document.addEventListener('change', async (e) => {
   if (f.id === 'w-file' && f.files[0]) {
     const file = f.files[0];
     const name = document.getElementById('w-name').value.trim() || file.name.replace(/\.[^.]+$/, '') || 'Biglietto';
-    await qrSet('w-' + Date.now(), { blob: file, label: name, day: Number(document.getElementById('w-day').value) || 0, created: Date.now() });
+    await qrSet('w-' + Date.now(), { blob: file, label: name, day: Number(document.getElementById('w-days').dataset.val) || 0, created: Date.now() });
     route(); return;
   }
   if (f.dataset.names != null) { const n = store.get('names', ['Persona 1', 'Persona 2']); n[Number(f.dataset.names)] = f.value.trim() || n[Number(f.dataset.names)]; store.set('names', n); route(); return; }
