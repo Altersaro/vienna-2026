@@ -228,10 +228,11 @@ const DAYS = [
       ride(s('10:15', 'visita', 'Parlamento, visita gratuita', 'Serve un documento con foto. Controlla gli orari di apertura prima di andare.', 'Parlament, Dr.-Karl-Renner-Ring 3, 1010 Wien', 'transit', 'parlament'),
         leg('U3', 'Stephansplatz', 'Volkstheater', 'Direzione Ottakring, 2 fermate, poi circa 7 min a piedi fino al Parlamento.')),
       s('11:00', 'visita', 'Palazzo di Giustizia', '8 min a piedi dal Parlamento. Atrio monumentale, ingresso con controllo di sicurezza. In cima c’è il Justizcafé, se vuoi un caffè con vista.', 'Justizpalast, Schmerlingplatz 10-14, 1016 Wien', 'walking', 'justiz'),
-      ride(s('12:15', 'cibo', 'Pranzo a Hietzing', 'Tram 60 da Westbahnhof. Otto Cafe o Radatz. Il tempo è stretto: alle 13:10 bisogna già partire per il palazzo.', 'Hietzinger Hauptstraße 22, 1130 Wien'),
-        leg('U3', 'Volkstheater', 'Westbahnhof', 'Direzione Ottakring, 4 fermate. Dal Palazzo di Giustizia sono 6 min a piedi fino al Volkstheater.'),
-        leg('60', 'Westbahnhof', 'Hietzing', 'Direzione Rodaun, 9 fermate.')),
-      s('13:30', 'visita', 'Palazzo di Schönbrunn · slot 13:30', '14 min a piedi da Hietzing.', 'Schloss Schönbrunn, 1130 Wien', 'walking', 'schoenbrunn'),
+      s('11:45', 'cibo', 'Pranzo al Justizcafé', 'Ultimo piano del Palazzo di Giustizia, terrazza panoramica. Controllo di sicurezza, cucina 11–14:30. Alle 12:30 bisogna partire per Schönbrunn.', 'Schmerlingplatz 11, 1010 Wien', 'walking'),
+      ride(s('13:30', 'visita', 'Palazzo di Schönbrunn · slot 13:30', 'Dal Justizcafé circa 45 min con metro. Partite entro le 12:40.', 'Schloss Schönbrunn, 1130 Wien', 'transit', 'schoenbrunn'),
+        leg('A piedi', 'Palazzo di Giustizia', 'Volkstheater', 'Circa 6 min.'),
+        leg('U2', 'Volkstheater', 'Karlsplatz', 'Direzione Seestadt, 2 fermate.'),
+        leg('U4', 'Karlsplatz', 'Schönbrunn', 'Direzione Hütteldorf, 6 fermate. Dalla stazione al palazzo 5 min a piedi.')),
       s('14:45', 'visita', 'Giardini e Gloriette', 'Salita gratuita, vista su Vienna. Sali prima del tramonto.', 'Gloriette, 1130 Wien', 'walking', 'gloriette'),
       s('16:30', 'serata', 'Mercatino di Schönbrunn e cena', 'Nel cortile davanti al palazzo, aperto fino alle 21.', null, null, 'mercatino-schoenbrunn'),
       s('18:00', 'serata', 'Imperial Lights', 'Illuminazioni serali nel parco davanti al palazzo. Controlla orario e biglietto sul sito ufficiale prima di andare.', 'Schloss Schönbrunn, 1130 Wien', 'walking'),
@@ -301,7 +302,8 @@ const FOOD = [
   { title: 'Dopo il Sisi Museum', places: [
     p('Justizcafé', 'da ≈10 €', 'Ultimo piano del Palazzo di Giustizia, terrazza panoramica. Cucina 11–14:30.', '14 min dal Sisi Museum', 'Schmerlingplatz 11, 1010 Wien'),
     p('MQ daily', '14,50 €', 'Menu completo nel MuseumsQuartier.', '7 min dal Palazzo di Giustizia', 'Museumsplatz 1, 1070 Wien') ]},
-  { title: 'A Hietzing, prima di Schönbrunn', places: [
+  { title: 'Pranzo prima di Schönbrunn', places: [
+    p('Justizcafé', 'da ≈10 €', 'Ultimo piano del Palazzo di Giustizia, terrazza panoramica. Cucina 11–14:30.', 'Dentro il Palazzo di Giustizia', 'Schmerlingplatz 11, 1010 Wien'),
     p('Otto Cafe-Restaurant', 'menu del giorno', 'Mittagsmenü del giorno, aperto 7–23.', '1 min dal tram 60', 'Hietzinger Hauptstraße 22, 1130 Wien'),
     p('Radatz Hietzing', '7,60–7,90 €', 'Gastronomia: piatti caldi, zuppa 4,30 €.', '3 min dal tram 60', 'Radatz, Hietzinger Hauptstraße, 1130 Wien') ]},
   { title: 'Bratislava: denné menu', places: [
